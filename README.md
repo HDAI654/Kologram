@@ -1,5 +1,13 @@
 # Login and Register Page with Django and Next.js
 
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/DRF-ff1709?style=for-the-badge&logo=django&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+
+
+
+
 ## Introduction
 This is a full-stack authentication project built with Django (backend) and Next.js (frontend). It provides a secure and user-friendly way for users to register and log in to the application.
 
