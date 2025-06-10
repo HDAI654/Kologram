@@ -1,4 +1,4 @@
-# Login and Register Page with Django and Next.js
+# Online Shopping Website
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
@@ -9,13 +9,13 @@
 
 
 ## Introduction
-This is a full-stack authentication project built with Django (backend) and Next.js (frontend). It provides a secure and user-friendly way for users to register and log in to the application.
+This is an online shopping website built using Django and Next.js. It provides a user-friendly interface for users to browse products, add them to their cart, and make purchases. The project also includes user authentication and authorization features.
 
 ## Features
-- **User Registration:** New users can sign up using their email and password.
-- **User Login:** Registered users can log in securely.
-- **Protected Routes:** Only authenticated users can access certain pages.
-- **Session Management:** Handles login persistence securely.
+- User registration and login.
+- Product browsing and search.
+- Product details and descriptions.
+- Shopping cart functionality.
 
 
 ## Technologies Used
