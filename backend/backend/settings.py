@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'auth_app',
+    'prd_api',
     
 ]
 
@@ -135,3 +136,5 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_HTTPONLY = False
 CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'

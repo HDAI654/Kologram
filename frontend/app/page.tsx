@@ -16,6 +16,8 @@ export default function Home() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    document.title = "Kologram - Home";
+
     axios.get("/auth/get_auth/")
     .then((res) => {
       if (res.data.auth === false) {
@@ -38,8 +40,8 @@ export default function Home() {
   return (
     <div className="container-fluid vh-100 bg-dark">
       <div className="row">
-        < Sidebar setError={setError} />
-        <h1 className="text-center text-light">Home</h1>
+        < Sidebar />
+        <h1 className="text-center mt-5 text-light">Home</h1>
         {error && <p className="text-center text-danger">{error}</p>}
       </div>
     </div>

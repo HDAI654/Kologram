@@ -5,12 +5,13 @@ import axios from "axios";
 import baseURL from "../../BaseURL";
 import { useRouter } from "next/navigation";
 import Loading_component from "../../component/Loading";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
 
 function Reg_component() {
-  const [error, setError] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [passwords, setPasswords] = useState("");
   const [load, setLoad] = useState(false);
@@ -25,7 +26,10 @@ function Reg_component() {
           setLoad(true);
         }
       })
-      .catch((err) => setLoad(false));
+      .catch((err) => {
+        setLoad(false)
+        toast.error("Something went wrong. Please try again.");
+      });
   }, []);
 
 
@@ -49,12 +53,18 @@ function Reg_component() {
       if (res.data.reg === true) {
         router.push("/");
       } else if (res.data.reg === "EXISTS") {
-        setError("Username already exists !");
+        toast.error("Username already exists !");
       }else {
-        setError("Invalid data provided !");
+        toast.error("Invalid data provided !");
       }
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
+    } catch (err:any) {
+      if (err.response && err.response.status === 409) {
+        toast.error("Username already exists !");
+      } else if (err.response && err.response.status === 422) {
+        toast.error("Invalid data provided !");
+      } else {
+        toast.error("Something went wrong. Try again.");
+      }
     }
   };
 
@@ -75,12 +85,38 @@ function Reg_component() {
 
   if (load === false) {
     return (
-      <Loading_component />
+      <>
+        <Loading_component />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+      </>
     );
   }
 
   return (
     <div className="container-fluid vh-100 bg-dark">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
       <div className="row justify-content-center align-items-center min-vh-100">
         <div className="col-lg-4 col-md-6 col-sm-8 mx-auto mt-5 rounded-5 bg-dark d-flex flex-column justify-content-between" style={{ height: "80vh", boxShadow:"0px 0px 20px 2px rgba(255, 255, 255, 0.8)" }}>
 
@@ -100,9 +136,6 @@ function Reg_component() {
 
                 <label htmlFor="email" className="form-label text-light"> Email </label>
                 <input type="email" className="form-control mb-3" id="email" placeholder="Enter your email" name="email" required />
-
-
-                {error && <p className="text-danger">{error}</p>}
 
                 <button type="submit" className="btn btn-primary mt-2 w-100" disabled={(confirm===false) ? true : false}> Register </button>
               </div>

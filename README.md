@@ -16,12 +16,14 @@ This is an online shopping website built using Django and Next.js. It provides a
 - Product browsing and search.
 - Product details and descriptions.
 - Shopping cart functionality.
+- Responsive pages.
 
 
 ## Technologies Used
 - **Django:** Backend framework for API and authentication.
 - **Next.js:** React-based frontend framework for SSR and routing.
-- **REST API / Django REST Framework** (optional to mention if used).
+- **REST API / Django REST Framework** 
+- **Responsive Pages** with Bootstrap
 
 ## Getting Started
 To run this project locally, follow these steps:

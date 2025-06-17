@@ -1,7 +1,7 @@
 "use client";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-function Loading_component() {
+function Loading_component({error}:{error:string}) {
   return (
     <div className="container-fluid vh-100 bg-dark d-flex justify-content-center align-items-center">
       <div className="d-flex align-items-center gap-3">

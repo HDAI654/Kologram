@@ -5,12 +5,13 @@ import axios from "axios";
 import baseURL from "../../BaseURL";
 import { useRouter } from "next/navigation";
 import Loading_component from "../../component/Loading";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
 
 function Login_component() {
-  const [error, setError] = useState("");
   const [load, setLoad] = useState(false);
   const router = useRouter();
 
@@ -23,7 +24,9 @@ function Login_component() {
           setLoad(true);
         }
       })
-      .catch((err) => setLoad(false));
+      .catch((err) => {setLoad(false)
+        toast.error("Something went wrong. Please try again.")
+      });
   }, []);
 
   const handle_login = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -44,22 +47,54 @@ function Login_component() {
       if (res.data.login === true) {
         router.push("/");
       } else {
-        setError("Invalid username or password");
+        toast.error("Invalid username or password");
       }
     } catch (err : any) {
-      setError("Something went wrong. Please try again.");
-    }
+        if (err.response && err.response.status === 422) {
+          toast.error("Invalid data !");
+        } else if (err.response && err.response.status === 401) {
+          toast.error("Invalid username or password");
+        }  else {
+          toast.error("Something went wrong. Try again.");
+        }
+      }
   };
 
   
   if (load === false) {
     return (
-      <Loading_component />
+      <>
+        <Loading_component />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+      </>
     );
   }
   
   return (
     <div className="container-fluid vh-100 bg-dark">
+       <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+              />
       <div className="row justify-content-center align-items-center min-vh-100">
         <div className="col-lg-4 col-md-6 col-sm-8 mx-auto mt-5 rounded-5 bg-dark d-flex flex-column justify-content-between" style={{ height: "80vh", boxShadow:"0px 0px 20px 2px rgba(255, 255, 255, 0.8)" }}>
 
@@ -73,8 +108,6 @@ function Login_component() {
 
                 <label htmlFor="password" className="form-label text-light"> Password </label>
                 <input type="password" className="form-control mb-3" id="password" placeholder="Enter your password" name="password" required />
-
-                {error && <p className="text-danger">{error}</p>}
 
                 <button type="submit" className="btn btn-primary mt-2 w-100"> Login </button>
               </div>
