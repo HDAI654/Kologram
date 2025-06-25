@@ -32,6 +32,7 @@ class products(models.Model):
     currency_type = models.CharField(max_length=20, choices=currency_choices, null=False)
     image = models.ImageField(null=True)
     stars = models.IntegerField(null=True, default=0)
+    likes = models.IntegerField(null=True, default=0)
 
 class ProductStars(models.Model):
     product = models.ForeignKey(products, on_delete=models.CASCADE)
@@ -41,6 +42,13 @@ class ProductStars(models.Model):
         unique_together = ('product', 'user')
 
 class ProductInCart(models.Model):
+    product = models.ForeignKey(products, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('product', 'user')
+
+class ProductLikes(models.Model):
     product = models.ForeignKey(products, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 

@@ -30,7 +30,7 @@ export default function Sidebar() {
           });
 
           if (res.data.logout === true) {
-              router.push("/auth/login/");
+              router.push("/auth");
           } else {
               toast.error("Logout failed!");
           }
@@ -68,6 +68,7 @@ export default function Sidebar() {
         </div>
         <div className="offcanvas-body">
           <ul className="list-unstyled">
+            <li className="mt-2"><a href="/panel" className="nav-link">Panel</a></li>
             <li className="mt-2"><a href="/auth/login" className="nav-link">Login</a></li>
             <li className="mt-2"><span className="nav-link" onClick={handle_logout} style={{ cursor: "pointer" }}> Logout </span></li>
             <li className="mt-2"><a href="/products" className="nav-link">Products</a></li>

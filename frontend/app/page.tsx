@@ -21,7 +21,7 @@ export default function Home() {
     axios.get("/auth/get_auth/")
     .then((res) => {
       if (res.data.auth === false) {
-        router.push(`/auth/login`);
+        router.push(`/auth`);
       } else {
         setLoad(true);
       }

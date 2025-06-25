@@ -21,8 +21,10 @@ function Viewprd() {
   const id = searchParams.get("id");
   const [load, setLoad] = useState(false);
   const [info, setInfo] = useState(false);
-  const [starred, setStarred] = useState("DISABLED")
-  const [inCart, setInCart] = useState("DISABLED")
+  const [starred, setStarred] = useState("DISABLED");
+  const [inCart, setInCart] = useState("DISABLED");
+  const [liked, setLiked] = useState("DISABLED");
+  const [submitCommentLoad, setSubmitCommentLoad] = useState(false);
 
   useEffect(() => {
     const bootstrapInit = async () => {
@@ -39,7 +41,7 @@ function Viewprd() {
               setLoad(true);
               return; 
           } else {
-              prd_info.image = baseURL + prd_info.image
+              prd_info.image = prd_info.image !== null && baseURL + prd_info.image
               setInfo(prd_info);
               setLoad(true);
               document.title = prd_info.name || "Product Details";
@@ -100,6 +102,33 @@ function Viewprd() {
       }
     };
     check_inCart();
+
+    const check_liked = async () => {
+      try {
+        const res = await axios.get(`/prd-api/is-liked/?prd_ID=${id}`);
+        const hs = res.data.status;
+
+        if (hs === true) {
+          setLiked("YES");
+        } else if (hs === false) {
+          setLiked("NO");
+        } else if (hs === "NO_LOGIN") {
+          setLiked("NO_LOGIN");
+        } else {
+          setLiked("DISABLED");
+        }
+      } catch (err:any) {
+        if (err.response && err.response.status === 401) {
+          setLiked("NO_LOGIN");
+        } else {
+          setLiked("DISABLED");
+        }
+      }
+    };
+    check_liked();
+
+    handleResize();
+    window.addEventListener("resize", handleResize)
   }, []);
 
   const handle_star_click = async () => {
@@ -185,11 +214,65 @@ function Viewprd() {
     }
   };
 
+  const handle_like_click = async () => {
+    if (liked === "NO_LOGIN") {
+      toast.warn("Login required to like products.");
+      return;
+    } else if (liked === "DISABLED") {
+      toast.error("Something went wrong. Try again.");
+      return;
+    }
+
+    try {
+      console.log(info.image)
+      setLiked("LOADING")
+      const opt = liked === "YES" ? "DEL" : "ADD";
+      const csrfToken = getCookie("csrftoken");
+      const res = await axios.post(`/prd-api/chn-like/?opt=${opt}&prd_ID=${id}`, {}, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            }
+          });
+
+      if (res.data.status === "OK") {
+        setLiked(opt === "ADD" ? "YES" : "NO");
+
+        setInfo(prev => ({
+          ...prev,
+          likes: opt === "ADD" ? prev.likes + 1 : Math.max(prev.likes - 1, 0),
+        }));
+
+        toast.success(opt === "ADD" ? "Liked successful" : "like removed.");
+      } else if (res.data.status === "NO_LOGIN") {
+        toast.error("Login required to like products.");
+      } else {
+        toast.error("Something went wrong. Try again.");
+      }
+
+    } catch (err : any) {
+      if (err.response && err.response.status === 401) {
+        toast.warn("Login required to like products.");
+      } else {
+        toast.error("Something went wrong. Try again."); 
+      }
+    }
+  };
+
+  const handleResize = () => {
+    let width = window.innerWidth
+    if (width < 768) {
+      console.log("0");
+    } else {
+      console.log("1");
+    }
+  }
+
   if (load === false) return <Loading_component />;
   if (!id && info === false) return <p style={{ color: "red" }}>Invalid product !!!</p>;
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#212529", color: "#fff" }}>
+    <>
       < Sidebar />
 
       <ToastContainer
@@ -206,7 +289,7 @@ function Viewprd() {
       />
 
       <div className="container py-4">
-        <div className="row rounded-5" style={{ backgroundColor: "#fff" }}>
+        <div className="row rounded-top-5" style={{ backgroundColor: "#fff" }}>
           <div className="col-lg-6 col-md-12 col-sm-12 p-3">
             <img
                 src={info.image || defaultImage}
@@ -233,7 +316,25 @@ function Viewprd() {
                     ></span>
                   ) : (
                     <>
-                      {starred === "YES" ? "⭐" : "🟊"} {info.stars}
+                      {starred === "YES" ? "⭐" : "★"} {info.stars}
+                    </>
+                  )}
+                </span>
+                <span
+                  className="badge bg-dark rounded-5 text-wrap ms-2"
+                  style={{ cursor: starred === "DISABLED" ? "not-allowed" : "pointer" }}
+                  aria-disabled={starred === "DISABLED"}
+                  onClick={handle_like_click}
+                >
+                  {liked === "LOADING" ? (
+                    <span
+                      className="spinner-border spinner-border-sm text-light"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                  ) : (
+                    <>
+                      {liked === "YES" ? "♥️" : "🤍"} {info.likes}
                     </>
                   )}
                 </span>
@@ -264,8 +365,22 @@ function Viewprd() {
 
           </div>
         </div>
+
+        <div className="row rounded-bottom-5 border-top border-2 px-3" style={{ backgroundColor: "#fff" }}>
+          <h2 className="text-left text-dark text-wrap mt-3">Comments :</h2>
+
+          <form className="form-group mt-3 mb-3">
+            <label htmlFor="comment" className="text-dark text-wrap form-label">Leave a comment :</label>
+            <div className="input-group">
+                <input type="text" className="form-control text-wrap" id="comment" placeholder="Enter your comment about this product..." name="comment" required />
+                <button type="submit" className="btn btn-success">Submit</button>
+            </div>
+          </form>
+        </div>
+
+
       </div>
-    </div>
+    </>
   );
 
 }

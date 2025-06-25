@@ -7,4 +7,7 @@ urlpatterns = [
     path('chn-star/', ChangeStar.as_view()),
     path('is-inCart/', isProductInCart.as_view()),
     path('chn-inCart/', ChangeInCart.as_view()),
+    path('is-liked/', HasUserLikedProduct.as_view()),
+    path('chn-like/', ChangeLike.as_view()),
+    path('addPrd/', AddPrd.as_view())
 ]

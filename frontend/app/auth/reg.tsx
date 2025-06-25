@@ -2,22 +2,25 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import baseURL from "../../BaseURL";
+import baseURL from "../BaseURL";
 import { useRouter } from "next/navigation";
-import Loading_component from "../../component/Loading";
+import Loading_component from "../component/Loading";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import getCookie from "../getCookie";
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
 
-function Reg_component() {
+function Reg_component({setPage}:{setPage:Function}) {
   const [confirm, setConfirm] = useState(false);
   const [passwords, setPasswords] = useState("");
   const [load, setLoad] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    document.title = "Kologram - Register";
+
     axios.get("/auth/get_auth/")
       .then((res) => {
         if (res.data.auth === true) {
@@ -46,8 +49,9 @@ function Reg_component() {
     };
 
     try {
+      const csrfToken = getCookie("csrftoken");
       const res = await axios.post("/auth/reg/", data, {
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken},
       });
 
       if (res.data.reg === true) {
@@ -85,21 +89,7 @@ function Reg_component() {
 
   if (load === false) {
     return (
-      <>
-        <Loading_component />
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
-      </>
+      <Loading_component />
     );
   }
 
@@ -125,17 +115,17 @@ function Reg_component() {
             <h1 className="text-center text-light mt-4">Register</h1>
             <form onSubmit={handle_reg} method="post" className="px-3">
               <div className="form-group">
-                <label htmlFor="username" className="form-label text-light mt-4" > Username </label>
-                <input type="text" className="form-control mb-3" id="username" placeholder="Enter your username" name="username" required />
+                <label htmlFor="username" className="form-label text-light mt-4 text-wrap" > Username </label>
+                <input type="text" className="form-control mb-3 text-wrap" id="username" placeholder="Enter your username" name="username" required />
 
-                <label htmlFor="password" className="form-label text-light"> Password </label>
-                <input type="password" className="form-control mb-3" id="password" placeholder="Enter your password" name="password" onChange={confirm_handle} required />
+                <label htmlFor="password" className="form-label text-light text-wrap"> Password </label>
+                <input type="password" className="form-control mb-3 text-wrap" id="password" placeholder="Enter your password" name="password" onChange={confirm_handle} required />
 
-                <label htmlFor="confirm_password" className="form-label text-light"> Confirm Password </label>
-                <input type="password" className="form-control mb-3" id="confirm_password" placeholder="Confirm your password" name="confirm_password" onChange={confirm_handle} required />
+                <label htmlFor="confirm_password" className="form-label text-light text-wrap"> Confirm Password </label>
+                <input type="password" className="form-control mb-3 text-wrap" id="confirm_password" placeholder="Confirm your password" name="confirm_password" onChange={confirm_handle} required />
 
-                <label htmlFor="email" className="form-label text-light"> Email </label>
-                <input type="email" className="form-control mb-3" id="email" placeholder="Enter your email" name="email" required />
+                <label htmlFor="email" className="form-label text-light text-wrap"> Email </label>
+                <input type="email" className="form-control mb-3 text-wrap" id="email" placeholder="Enter your email" name="email" required />
 
                 <button type="submit" className="btn btn-primary mt-2 w-100" disabled={(confirm===false) ? true : false}> Register </button>
               </div>
@@ -146,7 +136,7 @@ function Reg_component() {
           <div className="text-center mb-4 px-3">
 
             <hr className="text-light" />
-            <h5 className="text-light"> <a href="/auth/login" className="text-primary"> Back to Login </a> </h5>
+            <h5 className="text-primary" onClick={(() => {setPage("0")})} style={{cursor: "pointer"}}> Back to Login </h5>
 
           </div>
 
