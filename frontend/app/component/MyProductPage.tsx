@@ -7,32 +7,44 @@ import defaultImage from "../DefaultImage";
 import "@/public/myPrd.css";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import getCookie from "../getCookie";
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+import EditProductModal from "./EditPrdModal";
+
+const MySwal = withReactContent(Swal);
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
 
 function MyProductPage() {
-  const [myPrd, setMyPrd] = useState([])
-  const [errorSTS, seterrorSTS] = useState(false)
-  const [isSmallScreen, setSmallScreen] = useState(0)
+  const [myPrd, setMyPrd] = useState([]);
+  const [errorSTS, seterrorSTS] = useState(false);
+  const [isSmallScreen, setSmallScreen] = useState(0);
+  const [isDelLoad, setDelLoad] = useState(false);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [modalKey, setModalKey] = useState(0);
+
+  const get_prds = async () => {
+    try {
+        const res = await axios.get(`/prd-api/get_products?by_user=1`);
+        const prds = res.data.products
+        if (prds === false) {
+            seterrorSTS(true);
+            return; 
+        } else {
+          setMyPrd(prds)
+          return; 
+        }
+    } catch (err : any) {
+        seterrorSTS(true);
+        return; 
+    }
+  }
 
   useEffect(() => {
-    const get_prds = async () => {
-      try {
-          const res = await axios.get(`/prd-api/get_products?by_user=1`);
-          const prds = res.data.products
-          if (prds === false) {
-              seterrorSTS(true);
-              return; 
-          } else {
-            setMyPrd(prds)
-            return; 
-          }
-      } catch (err : any) {
-          seterrorSTS(true);
-          return; 
-      }
-    }
     get_prds();
 
     handleResize();
@@ -49,8 +61,116 @@ function MyProductPage() {
     }
   };
 
-  const handleEditClick = (id:number) => {
-    console.log(String(id))
+  const handleEditClick = async (id: number) => {
+    try {
+      const res = await axios.get(`/prd-api/get_products?id=${id}`);
+      const data = res.data.products;
+
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        toast.error("Product not found.");
+        return;
+      }
+
+      setSelectedProduct(data[0]);
+      setShowEditModal(true);
+    } catch (err) {
+      toast.error("Failed to load product.");
+    }
+  };
+
+  const setEditToServer = async () => {
+    try{
+      const formData = new FormData();
+      formData.append("id", selectedProduct.id.toString());
+      formData.append("name", selectedProduct.name);
+      formData.append("discription", selectedProduct.discription || selectedProduct.description || "");
+      formData.append("price", selectedProduct.price.toString());
+      formData.append("currency_type", selectedProduct.currency_type);
+
+      if (selectedProduct.image) {
+        formData.append("image", selectedProduct.image);
+      }
+
+      const csrfToken = getCookie("csrftoken");
+      const res = await axios.post("/prd-api/editPrd/", formData, {
+        headers: {
+          "X-CSRFToken": csrfToken,
+        },
+      });
+      if (res.data.result === true) {
+        toast.info("Your product edited successful");
+      }
+    }catch (err: any) {
+      console.log(err)
+      if (err.response) {
+        if (err.response.status === 400) {
+          toast.error("Invalid data !");
+        } else if (err.response.status === 401) {
+          toast.error("Login required to edit a product!");
+        } else if (err.response.status === 404) {
+          toast.error("Product not found or permission denied.");
+        } else {
+          toast.error("Something went wrong. Try again.");
+        }
+      } else {
+        toast.error("Network error or server not reachable.");
+      }
+    } finally {
+      setModalKey(prev => prev + 1);
+      get_prds();
+    }
+  };
+
+  const handleDelClick = async (id:number) => {
+    try{
+      const result = await MySwal.fire({
+        title: 'Are you sure?',
+        text: "This product will be deleted!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        deleteProduct(id);
+      }   
+    }catch (err: any) {
+      toast.error("Network error or server not reachable.");
+    }
+  };
+
+  const deleteProduct = async (id:number) => {    
+    try{
+      setDelLoad(true);
+
+      const csrfToken = getCookie("csrftoken");
+      const res = await axios.post("/prd-api/delPrd/", {"id":id}, {
+        headers: {
+          "X-CSRFToken": csrfToken,
+          "Content-Type": "application/json"
+        },
+      });
+
+      if (res.data.result === true) {
+        toast.info("Your product Deleted successful");
+        setMyPrd(prevPrds => prevPrds.filter(prd => prd.id !== id));
+      }
+    }catch (err: any) {
+      if (err.response) {
+        if (err.response.status === 400) {
+          toast.error("Invalid data ! couldn't find your product");
+        } else if (err.response.status === 404) {
+          toast.error("This product is not exist !!");
+        } else {
+          toast.error("Something went wrong. Try again.");
+        }
+      } else {
+        toast.error("Network error or server not reachable.");
+      }
+    } finally {
+      setDelLoad(false);
+    }
   };
 
   const handleResize = () => {
@@ -65,7 +185,12 @@ function MyProductPage() {
       setSmallScreen(0);
       return;
     }
-  }
+  };
+
+  const modalClose = () => {
+    setShowEditModal(false);
+    setModalKey(prev => prev + 1);
+  };
 
   const chunkedProducts = [];
   for (let i = 0; i < myPrd.length; i += 2) {
@@ -87,6 +212,19 @@ function MyProductPage() {
         pauseOnHover
         theme="dark"
       />
+
+      <EditProductModal
+        key={modalKey}
+        show={showEditModal}
+        onClose={modalClose}
+        product={selectedProduct}
+        setProduct={setSelectedProduct}
+        onSave={() => {
+          setShowEditModal(false);
+          setEditToServer();
+        }}
+      />
+
       <div className="container">
 
         {chunkedProducts.map((group, rowIndex) => (
@@ -106,6 +244,9 @@ function MyProductPage() {
                   <span className="badge bg-success text-light rounded-5 text-wrap ms-2" style={{cursor:"pointer"}} onClick={() => handleEditClick(v.id)}>
                     Show/Edit
                   </span>
+                  
+                  {isDelLoad ? <span className="spinner-border spinner-border-sm text-light" role="status" aria-hidden="true"></span> : <span className="badge bg-danger text-light rounded-5 text-wrap ms-2" style={{cursor:"pointer"}} onClick={() => handleDelClick(v.id)}>Delete</span> }
+
                   <span className="badge bg-primary text-light rounded-5 text-wrap ms-2" style={{cursor:"pointer"}} onClick={() => handle_prd_click(v.id)}>
                     Open
                   </span>

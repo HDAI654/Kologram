@@ -1,0 +1,25 @@
+let currencyChoices = [
+    ['USD', 'US Dollar'],
+    ['IRR', 'Iranian Rial'],
+    ['EUR', 'Euro'],
+    ['GBP', 'British Pound'],
+    ['JPY', 'Japanese Yen'],
+    ['CHF', 'Swiss Franc'],
+    ['CAD', 'Canadian Dollar'],
+    ['AUD', 'Australian Dollar'],    
+    ['NZD', 'New Zealand Dollar'],
+    ['CNY', 'Chinese Yuan'],
+    ['INR', 'Indian Rupee'],
+    ['RUB', 'Russian Ruble'],
+    ['BRL', 'Brazilian Real'],
+    ['ZAR', 'South African Rand'],
+    ['KRW', 'South Korean Won'],
+    ['MXN', 'Mexican Peso'],
+    ['SGD', 'Singapore Dollar'],
+    ['HKD', 'Hong Kong Dollar'],
+    ['SEK', 'Swedish Krona'],
+    ['NOK', 'Norwegian Krone'],
+    ['TRY', 'Turkish Lira'],
+]
+
+export default currencyChoices;

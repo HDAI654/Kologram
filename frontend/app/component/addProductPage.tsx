@@ -1,12 +1,13 @@
 "use client";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import axios from "axios";
 import baseURL from "../BaseURL";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import getCookie from "../getCookie";
+import currencyChoices from "../currency_choices";
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
@@ -16,29 +17,7 @@ function AddProductPage({hidden=true}:{hidden:boolean}) {
   const [info_markdown_mode, set_info_markdown_mode] = useState("0")
   const [discriptionText, setDiscriptionText] = useState("")
   const [submitLoad, setSubmitLoad] = useState(false)
-  const currency_choices = [
-        ['USD', 'US Dollar'],
-        ['IRR', 'Iranian Rial'],
-        ['EUR', 'Euro'],
-        ['GBP', 'British Pound'],
-        ['JPY', 'Japanese Yen'],
-        ['CHF', 'Swiss Franc'],
-        ['CAD', 'Canadian Dollar'],
-        ['AUD', 'Australian Dollar'],    
-        ['NZD', 'New Zealand Dollar'],
-        ['CNY', 'Chinese Yuan'],
-        ['INR', 'Indian Rupee'],
-        ['RUB', 'Russian Ruble'],
-        ['BRL', 'Brazilian Real'],
-        ['ZAR', 'South African Rand'],
-        ['KRW', 'South Korean Won'],
-        ['MXN', 'Mexican Peso'],
-        ['SGD', 'Singapore Dollar'],
-        ['HKD', 'Hong Kong Dollar'],
-        ['SEK', 'Swedish Krona'],
-        ['NOK', 'Norwegian Krone'],
-        ['TRY', 'Turkish Lira'],
-    ]
+  const formRef = useRef<HTMLFormElement | null>(null);
   
   useEffect(() => {
     handleResize();
@@ -65,30 +44,30 @@ function AddProductPage({hidden=true}:{hidden:boolean}) {
       e.preventDefault(); // Prevent the default form submission behavior
       const form = e.currentTarget;
       const formData = new FormData(form);
-      const data = {
-        name: formData.get("name"),
-        discription: formData.get("discription"),
-        price: formData.get("price"),
-        currency_type: formData.get("currency_type"),
-        image: formData.get("image"),
-      };
 
-      console.log(data)
       const csrfToken = getCookie("csrftoken");
-      const res = await axios.post("/prd-api/addPrd/", data, {
-        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken},
+      const res = await axios.post("/prd-api/addPrd/", formData, {
+        headers: {
+          "X-CSRFToken": csrfToken,
+        },
       });
 
       if (res.data.result === true) {
+        formRef.current?.reset();
+        setDiscriptionText(""); 
         toast.info("Your product created successful");
-      } else {
-        toast.error("Something went wrong. Try again.");
       }
-    } catch (err : any) {
-      if (err.response && err.response.status === 422) {
-        toast.error("Invalid data !");
-      }  else {
-        toast.error("Something went wrong. Try again.");
+    }catch (err: any) {
+      if (err.response) {
+        if (err.response.status === 400) {
+          toast.error("Invalid data !");
+        } else if (err.response.status === 401) {
+          toast.error("Please login first!");
+        } else {
+          toast.error("Something went wrong. Try again.");
+        }
+      } else {
+        toast.error("Network error or server not reachable.");
       }
     } finally {
       setSubmitLoad(false)
@@ -113,7 +92,7 @@ function AddProductPage({hidden=true}:{hidden:boolean}) {
       <div className="container" hidden={hidden}>
           <div className="row">
             <div className="col-12">
-              <form className="form-group" onSubmit={handleAddPrd}>
+              <form className="form-group" ref={formRef} onSubmit={handleAddPrd}>
                 <label htmlFor="name" className="form-label text-light mt-4 text-wrap" > Name </label>
                 <input type="text" className="form-control mb-3 text-wrap" id="name" placeholder="Enter the name of your product" name="name" required />
 
@@ -130,7 +109,7 @@ function AddProductPage({hidden=true}:{hidden:boolean}) {
 
                 <label htmlFor="currency_type" className="form-label text-light mt-4 text-wrap" > Currency Type </label>
                 <select className="form-select" id="currency_type" name="currency_type">
-                  {currency_choices.map((value, index) => (
+                  {currencyChoices.map((value, index) => (
                     <option value={value[0]} key={index}>{value[1]}</option>
                   ))}
                 </select>

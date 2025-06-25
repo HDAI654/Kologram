@@ -3,7 +3,7 @@ from .models import products, ProductStars, ProductInCart, ProductLikes
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
-from .forms import add_prd
+from .forms import add_prd, edit_prd
 
 class get_products(APIView):
     def get(self, request):
@@ -282,8 +282,7 @@ class ChangeLike(APIView):
 class AddPrd(APIView):
     def post(self, request):
         try:
-            print(request.data)
-            form = add_prd(request.data)
+            form = add_prd(request.POST, request.FILES)
             if form.is_valid():
                 if request.user.is_authenticated:
                     user = request.user
@@ -299,9 +298,72 @@ class AddPrd(APIView):
                 
                 return Response({"result":False, "error":"Login required to add a product !"}, status=401)
             
-            return Response({"result":False, "error":"Invalid Data !"}, status=401)
+            return Response({"result":False, "error":"Invalid Data !"}, status=400)
         except Exception as e:
             logger.error(f"error in AddPrd: {e}")
             return Response({"result":False}, status=500)
  
-        
+class DelPrd(APIView):
+    def post(self, request):
+        try:
+            id = request.data.get('id', None)
+            if id is None:
+                return Response({"result": False, "error": "Invalid product ID!"}, status=400)
+
+            prd = products.objects.filter(id=id).first()
+            if not prd:
+                return Response({"result": False, "error": "Product not found!"}, status=404)
+
+            if prd.image:
+                prd.image.delete(save=False)
+
+            prd.delete() 
+
+            return Response({"result": True, "message": "Product deleted successfully."}, status=200)
+
+        except Exception as e:
+            logger.error(f"error in DelPrd: {e}")
+            return Response({"result": False, "error": "Server error."}, status=500)
+
+class EditProductView(APIView):
+    def post(self, request):
+        try:
+            form = edit_prd(request.POST, request.FILES)
+            if form.is_valid():
+                if not request.user.is_authenticated:
+                    return Response({"result": False, "error": "Login required to edit a product!"}, status=401)
+
+                user = request.user
+                id = form.cleaned_data["id"]
+                name = form.cleaned_data["name"]
+                discription = form.cleaned_data["discription"]
+                price = int(form.cleaned_data["price"])
+                currency_type = form.cleaned_data["currency_type"]
+                image = form.cleaned_data.get("image", None)
+
+                prd = products.objects.filter(id=id, user=user).first()
+                if not prd:
+                    return Response({"result": False, "error": "Product not found or permission denied."}, status=404)
+
+                prd.name = name
+                prd.discription = discription
+                prd.price = price
+                prd.currency_type = currency_type
+
+                # set new image if exist
+                if image:
+                    if prd.image:
+                        prd.image.delete(save=False)
+                    prd.image = image
+
+                prd.save()
+                return Response({"result": True, "message": "Product updated successfully."}, status=200)
+
+            return Response({"result": False, "error": "Invalid Data!"}, status=400)
+
+        except Exception as e:
+            logger.error(f"error in EditProductView: {e}")
+            return Response({"result": False, "error": "Server error."}, status=500)
+
+ 
+

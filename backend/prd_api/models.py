@@ -26,11 +26,11 @@ class products(models.Model):
         ('TRY', 'Turkish Lira'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=30, null=False)
+    name = models.CharField(max_length=50, null=False)
     discription = models.TextField(max_length=3000, null=False)
     price = models.IntegerField(null=False)
     currency_type = models.CharField(max_length=20, choices=currency_choices, null=False)
-    image = models.ImageField(null=True)
+    image = models.ImageField(upload_to="files/images/", null=True)
     stars = models.IntegerField(null=True, default=0)
     likes = models.IntegerField(null=True, default=0)
 

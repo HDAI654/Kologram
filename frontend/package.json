@@ -15,7 +15,10 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
-    "react-toastify": "^11.0.5"
+    "react-modal": "^3.16.3",
+    "react-toastify": "^11.0.5",
+    "sweetalert2": "^11.22.1",
+    "sweetalert2-react-content": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",
