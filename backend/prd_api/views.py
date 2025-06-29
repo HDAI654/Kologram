@@ -1,5 +1,5 @@
 from logger import logger
-from .models import products, ProductStars, ProductInCart, ProductLikes
+from .models import products, ProductStars, ProductInCart, ProductLikes, ProductComment
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
@@ -365,5 +365,47 @@ class EditProductView(APIView):
             logger.error(f"error in EditProductView: {e}")
             return Response({"result": False, "error": "Server error."}, status=500)
 
- 
+class GetPrdComment(APIView):
+    def get(self, request):
+        try:
+            id = request.GET.get('id', None)
+            page = request.GET.get('page', 0)
 
+            if id == None:
+                return Response({"result": False, "error": "Invalid product ID!"}, status=400)
+            
+            prd = products.objects.filter(id=id).first()
+            if not prd:
+                return Response({"result": False, "error": "Product not found!"}, status=404)
+            
+            comments = ProductComment.objects.all()[page*3:(page+1)*3]
+
+            comments_data = [{"text":comment.text, "user":comment.user.username} for comment in comments]
+            return Response({"result": True, "comments": comments_data}, status=200)
+        
+        except Exception as e:
+            logger.error(f"error in GetPrdComment: {e}")
+            return Response({"result": False, "error": "Server error."}, status=500)
+            
+class AddProductComment(APIView):
+    def post(self, request):
+        try:
+            text = request.data.get('text', None)
+            id = request.data.get('id', None)
+            print(text)
+            print(id)
+            if not text or not id:
+                return Response({"result": False, "error": "Invalid data!"}, status=400)
+            
+            prd = products.objects.filter(id=id).first()
+            if not prd:
+                return Response({"result": False, "error": "Product not found!"}, status=404)
+            
+            comment = ProductComment.objects.get_or_create(user=request.user, product=prd)[0]
+            comment.text = text
+            comment.save()
+            return Response({"result": True, "message": "Comment added successfully."}, status=200)
+        
+        except Exception as e:
+            logger.error(f"error in AddProductComment: {e}")
+            return Response({"result": False, "error": "Server error."}, status=500)

@@ -54,3 +54,11 @@ class ProductLikes(models.Model):
 
     class Meta:
         unique_together = ('product', 'user')
+
+class ProductComment(models.Model):
+    product = models.ForeignKey(products, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(max_length=3000, null=False)
+
+    class Meta:
+        unique_together = ('product', 'user')

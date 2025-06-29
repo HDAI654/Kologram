@@ -11,5 +11,7 @@ urlpatterns = [
     path('chn-like/', ChangeLike.as_view()),
     path('addPrd/', AddPrd.as_view()),
     path('delPrd/', DelPrd.as_view()),
-    path('editPrd/', EditProductView.as_view())
+    path('editPrd/', EditProductView.as_view()),
+    path('get-comments/', GetPrdComment.as_view()),
+    path('add-comment/', AddProductComment.as_view()),
 ]

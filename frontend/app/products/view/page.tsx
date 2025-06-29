@@ -25,6 +25,7 @@ function Viewprd() {
   const [inCart, setInCart] = useState("DISABLED");
   const [liked, setLiked] = useState("DISABLED");
   const [submitCommentLoad, setSubmitCommentLoad] = useState(false);
+  const [comment, setComment] = useState([]);
 
   useEffect(() => {
     const bootstrapInit = async () => {
@@ -127,6 +128,18 @@ function Viewprd() {
     };
     check_liked();
 
+    const get_comments = async () => {
+      try {
+        const res = await axios.get(`/prd-api/get-comments/?id=${id}`);
+        const comments = res.data.comments;
+        setComment(comments);
+      } catch (err:any) {
+        setComment([]);
+        toast.error("Problem in fetching comments.");
+      }
+    }
+    get_comments();
+
     handleResize();
     window.addEventListener("resize", handleResize)
   }, []);
@@ -224,7 +237,6 @@ function Viewprd() {
     }
 
     try {
-      console.log(info.image)
       setLiked("LOADING")
       const opt = liked === "YES" ? "DEL" : "ADD";
       const csrfToken = getCookie("csrftoken");
@@ -265,6 +277,32 @@ function Viewprd() {
       console.log("0");
     } else {
       console.log("1");
+    }
+  }
+
+  const handle_comment_add = async (e: React.FormEvent<HTMLFormElement>) => {
+    try{
+      setSubmitCommentLoad(true);
+      e.preventDefault();
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+
+      const csrfToken = getCookie("csrftoken");
+      const res = await axios.post(`/prd-api/add-comment/?prd_ID=${id}`, {"text": formData.get("comment"), "id":id}, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrfToken
+        }
+      })
+      toast.success("Comment added successfully");
+    } catch (err:any) {
+      if (err.response && err.response.status === 401) {
+        toast.warn("Login required to add comments.");
+      } else {
+        toast.error("Something went wrong. Try again.");
+      }
+    } finally {
+      setSubmitCommentLoad(false);
     }
   }
 
@@ -366,10 +404,26 @@ function Viewprd() {
           </div>
         </div>
 
-        <div className="row rounded-bottom-5 border-top border-2 px-3" style={{ backgroundColor: "#fff" }}>
+        <div className="row px-3" style={{ backgroundColor: "#fff" }}>
           <h2 className="text-left text-dark text-wrap mt-3">Comments :</h2>
 
-          <form className="form-group mt-3 mb-3">
+          {comment.map((comment, index) => (
+            <div key={index} className="col-lg-4 col-md-12 col-sm-12 border bg-warning rounded-3 mt-3 px-0">
+              <div className="bg-light w-100 p-1 rounded">
+                <h5 className="text-primary">@{comment.user}</h5>
+              </div>
+              <div className="px-3 text-left text-wrap text-dark">
+                <ReactMarkdown>{comment.text}</ReactMarkdown>
+              </div>
+            </div>
+          ))}
+
+          <button className="btn btn-light w-100 text-wrap">Show all comments</button>
+        </div>
+
+        <div className="row rounded-bottom-5 border-top border-2 px-3 mb-3" style={{ backgroundColor: "#fff" }}>
+
+          <form className="form-group mt-3 mb-3" onSubmit={handle_comment_add}>
             <label htmlFor="comment" className="text-dark text-wrap form-label">Leave a comment :</label>
             <div className="input-group">
                 <input type="text" className="form-control text-wrap" id="comment" placeholder="Enter your comment about this product..." name="comment" required />
@@ -377,7 +431,6 @@ function Viewprd() {
             </div>
           </form>
         </div>
-
 
       </div>
     </>
