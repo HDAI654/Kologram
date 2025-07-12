@@ -3,3 +3,5 @@
 2025-06-25 15:18:15,583 - ERROR - error in DelPrd: The joined path (/files/images/thinkpadt480.png) is located outside of the base path component (/home/hamed/Documents/Kologram/backend/media)
 2025-06-29 15:28:03,115 - ERROR - error in AddProductComment: 'tuple' object has no attribute 'text'
 2025-06-29 15:29:26,837 - ERROR - error in AddProductComment: 'tuple' object has no attribute 'text'
+2025-07-12 14:22:53,197 - ERROR - error in AddPrd: 'condition'
+2025-07-12 14:23:52,257 - ERROR - error in AddPrd: 'condition'

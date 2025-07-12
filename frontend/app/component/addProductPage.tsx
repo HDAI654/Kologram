@@ -4,10 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import axios from "axios";
 import baseURL from "../BaseURL";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import getCookie from "../getCookie";
 import currencyChoices from "../currency_choices";
+import '@/public/entry-styles.css'
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
@@ -76,58 +76,51 @@ function AddProductPage({hidden=true}:{hidden:boolean}) {
   }
 
   return (
-    <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
-      <div className="container" hidden={hidden}>
-          <div className="row">
-            <div className="col-12">
-              <form className="form-group" ref={formRef} onSubmit={handleAddPrd}>
-                <label htmlFor="name" className="form-label text-light mt-4 text-wrap" > Name </label>
-                <input type="text" className="form-control mb-3 text-wrap" id="name" placeholder="Enter the name of your product" name="name" required />
+    <div className="container" hidden={hidden}>
+        <div className="row">
+          <div className="col-12">
+            <form className="form-group fade-in-up" ref={formRef} onSubmit={handleAddPrd}>
+              <label htmlFor="name" className="form-label text-light mt-4 text-wrap" > Name </label>
+              <input type="text" className="form-control mb-3 text-wrap" id="name" placeholder="Enter the name of your product" name="name" required />
 
-                <label htmlFor="discription" className="form-label text-light mt-4 text-wrap" >
-                  Discription  {info_markdown_mode === "0" && <span className="badge bg-light text-dark rounded-5" onClick={handleShowMarkdownClick}>{info_markdown === "0" ? 'show markdown' : 'show text'}</span>}
-                </label>
-                {info_markdown_mode === "0" && info_markdown === "0" && <textarea className="form-control mb-3 text-wrap" id="discription" placeholder="Enter discription of your product" style={{minHeight:"400px"}} name="discription" value={discriptionText} onChange={((v) => {setDiscriptionText(v.target.value)})} required />}
-                {info_markdown_mode === "0" && info_markdown === "1" && <div className="bg-light rounded-3 p-1" style={{height:"400px"}}><ReactMarkdown>{discriptionText}</ReactMarkdown></div>}
-                {info_markdown_mode === "1" && <div className="d-flex"><textarea className="form-control mb-3 text-wrap w-50" id="discription" placeholder="Enter discription of your product" style={{minHeight:"400px"}} name="discription" value={discriptionText} onChange={((v) => {setDiscriptionText(v.target.value)})} required /><div className="bg-light rounded-3 p-1 w-50" style={{height:"400px"}}><ReactMarkdown>{discriptionText}</ReactMarkdown></div></div>}
+              <label htmlFor="discription" className="form-label text-light mt-4 text-wrap" >
+                Discription  {info_markdown_mode === "0" && <span className="badge bg-light text-dark rounded-5" onClick={handleShowMarkdownClick}>{info_markdown === "0" ? 'show markdown' : 'show text'}</span>}
+              </label>
+              {info_markdown_mode === "0" && info_markdown === "0" && <textarea className="form-control mb-3 text-wrap" id="discription" placeholder="Enter discription of your product" style={{minHeight:"400px"}} name="discription" value={discriptionText} onChange={((v) => {setDiscriptionText(v.target.value)})} required />}
+              {info_markdown_mode === "0" && info_markdown === "1" && <div className="bg-light rounded-3 p-1" style={{height:"400px"}}><ReactMarkdown>{discriptionText}</ReactMarkdown></div>}
+              {info_markdown_mode === "1" && <div className="d-flex"><textarea className="form-control mb-3 text-wrap w-50" id="discription" placeholder="Enter discription of your product" style={{minHeight:"400px"}} name="discription" value={discriptionText} onChange={((v) => {setDiscriptionText(v.target.value)})} required /><div className="bg-light rounded-3 p-1 w-50" style={{height:"400px"}}><ReactMarkdown>{discriptionText}</ReactMarkdown></div></div>}
 
 
-                <label htmlFor="price" className="form-label text-light mt-4 text-wrap" > Price </label>
-                <input type="number" className="form-control mb-3 text-wrap" id="price" placeholder="Enter the price of your product" name="price" required />
+              <label htmlFor="price" className="form-label text-light mt-4 text-wrap" > Price </label>
+              <input type="number" className="form-control mb-3 text-wrap" id="price" placeholder="Enter the price of your product" name="price" required />
 
-                <label htmlFor="currency_type" className="form-label text-light mt-4 text-wrap" > Currency Type </label>
-                <select className="form-select" id="currency_type" name="currency_type">
-                  {currencyChoices.map((value, index) => (
-                    <option value={value[0]} key={index}>{value[1]}</option>
-                  ))}
-                </select>
-                
-                <label htmlFor="image" className="form-label text-light mt-4 text-wrap" > Image </label>
-                <input type="file" className="form-control mb-3 text-wrap" id="image" name="image" />
+              <label htmlFor="currency_type" className="form-label text-light mt-4 text-wrap" > Currency Type </label>
+              <select className="form-select" id="currency_type" name="currency_type">
+                {currencyChoices.map((value, index) => (
+                  <option value={value[0]} key={index}>{value[1]}</option>
+                ))}
+              </select>
 
-                { submitLoad === false ? <button type="submit" className="btn btn-success mb-5 w-100">Add</button> : <button type="submit" className="btn btn-success mb-5 w-100" disabled>
-                  <span
-                    className="spinner-border spinner-border-sm text-light"
-                    role="status"
-                    aria-hidden="true"
-                  ></span></button> }
-              </form>
-            </div>
+              <label htmlFor="condition" className="form-label text-light mt-4 text-wrap" > Product Condition </label>
+              <select className="form-select" id="condition" name="condition">
+                <option value={"New"}>New</option>
+                <option value={"Used"}>Used</option>
+              </select>
+              
+              
+              <label htmlFor="image" className="form-label text-light mt-4 text-wrap" > Image </label>
+              <input type="file" className="form-control mb-3 text-wrap" id="image" name="image" />
+
+              { submitLoad === false ? <button type="submit" className="btn btn-success mb-5 w-100">Add</button> : <button type="submit" className="btn btn-success mb-5 w-100" disabled>
+                <span
+                  className="spinner-border spinner-border-sm text-light"
+                  role="status"
+                  aria-hidden="true"
+                ></span></button> }
+            </form>
           </div>
-      </div>
-    </>
+        </div>
+    </div>
   );
 }
 

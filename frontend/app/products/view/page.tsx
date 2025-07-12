@@ -8,9 +8,10 @@ import baseURL from "../../BaseURL";
 import defaultImage from "../../DefaultImage";
 import Sidebar from "../../component/DrawerMenu";
 import ReactMarkdown from "react-markdown";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import getCookie from "../../getCookie";
+import '@/public/entry-styles.css';
+import PrdComment from "../../component/prd-comment";
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
@@ -128,7 +129,13 @@ function Viewprd() {
     };
     check_liked();
 
-    const get_comments = async () => {
+    get_comments();
+
+    handleResize();
+    window.addEventListener("resize", handleResize)
+  }, []);
+
+  const get_comments = async () => {
       try {
         const res = await axios.get(`/prd-api/get-comments/?id=${id}`);
         const comments = res.data.comments;
@@ -138,11 +145,6 @@ function Viewprd() {
         toast.error("Problem in fetching comments.");
       }
     }
-    get_comments();
-
-    handleResize();
-    window.addEventListener("resize", handleResize)
-  }, []);
 
   const handle_star_click = async () => {
     if (starred === "NO_LOGIN") {
@@ -303,6 +305,7 @@ function Viewprd() {
       }
     } finally {
       setSubmitCommentLoad(false);
+      get_comments();
     }
   }
 
@@ -313,20 +316,7 @@ function Viewprd() {
     <>
       < Sidebar />
 
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
-
-      <div className="container py-4">
+      <div className="container-fluid py-4">
         <div className="row rounded-top-5" style={{ backgroundColor: "#fff" }}>
           <div className="col-lg-6 col-md-12 col-sm-12 p-3">
             <img
@@ -380,6 +370,9 @@ function Viewprd() {
 
               <h5 className="text-left text-wrap text-dark">
                 {info.price} {info.currency_type} 
+                <span className="badge bg-dark text-light rounded-5 text-wrap ms-2">
+                  { info.condition }
+                </span>
                 <span className="badge bg-warning text-dark rounded-5 text-wrap ms-2" style={{ cursor: "pointer" }} onClick={handle_Cart_click}>
                   {inCart === "LOADING" ? (
                     <span
@@ -397,39 +390,32 @@ function Viewprd() {
               <hr className="text-dark"/>
               <h5 className="text-left text-wrap text-dark">About this item :</h5>
               
-              <div className="text-left text-wrap text-dark">
+              <div className="text-left text-wrap text-dark border p-2" style={{maxHeight: "45vh", overflowY: "auto"}}>
                 <ReactMarkdown>{info.description}</ReactMarkdown>
               </div>
 
           </div>
         </div>
 
-        <div className="row px-3" style={{ backgroundColor: "#fff" }}>
+        <div className="row px-3 rounded-bottom-5" style={{ backgroundColor: "#fff" }}>
           <h2 className="text-left text-dark text-wrap mt-3">Comments :</h2>
 
           {comment.map((comment, index) => (
-            <div key={index} className="col-lg-4 col-md-12 col-sm-12 border bg-warning rounded-3 mt-3 px-0">
-              <div className="bg-light w-100 p-1 rounded">
-                <h5 className="text-primary">@{comment.user}</h5>
-              </div>
-              <div className="px-3 text-left text-wrap text-dark">
-                <ReactMarkdown>{comment.text}</ReactMarkdown>
-              </div>
+            <div className="col-lg-4 col-md-12 col-sm-12 px-1 " key={index}>
+              <PrdComment user={comment.user} text={comment.text} />
             </div>
           ))}
 
-          <button className="btn btn-light w-100 text-wrap">Show all comments</button>
-        </div>
+          {comment.length > 3 && <button className="btn btn-light w-100 text-wrap">Show all comments</button>}
+          {comment.length === 0 && <h5 className="h5 w-100 text-wrap text-center">No comment to show !</h5>}
 
-        <div className="row rounded-bottom-5 border-top border-2 px-3 mb-3" style={{ backgroundColor: "#fff" }}>
-
-          <form className="form-group mt-3 mb-3" onSubmit={handle_comment_add}>
-            <label htmlFor="comment" className="text-dark text-wrap form-label">Leave a comment :</label>
-            <div className="input-group">
-                <input type="text" className="form-control text-wrap" id="comment" placeholder="Enter your comment about this product..." name="comment" required />
-                <button type="submit" className="btn btn-success">Submit</button>
-            </div>
-          </form>
+          <div className="col-lg-6 col-md-12 col-sm-12">
+            <form className="form-group mt-5 mb-3 " onSubmit={handle_comment_add}>
+              <label htmlFor="comment" className="text-dark text-wrap form-label h3">Leave a comment :</label>
+              <textarea className="form-control text-wrap border-2 border-dark" id="comment" placeholder="Enter your comment about this product..." style={{minHeight: "200px"}} name="comment" required />    
+              <button type="submit" className="btn btn-success w-100">Submit</button>
+            </form>
+          </div>
         </div>
 
       </div>

@@ -48,6 +48,7 @@ class get_products(APIView):
                     "image": p.image.url if p.image else None,
                     "stars": p.stars if p.stars else 0,
                     "likes": p.likes if p.likes else 0,
+                    "condition": p.condition,
                 }
                 for p in product_qs
             ]
@@ -291,8 +292,9 @@ class AddPrd(APIView):
                     price = int(form.cleaned_data["price"])
                     currency_type = form.cleaned_data["currency_type"]
                     image = form.cleaned_data["image"]
+                    condition = form.cleaned_data["condition"]
 
-                    prd = products.objects.create(user=user, name=name, discription=discription, price=price, currency_type=currency_type, image=image)
+                    prd = products.objects.create(user=user, name=name, discription=discription, price=price, currency_type=currency_type, image=image, condition=condition)
                     prd.save()
                     return Response({"result":True}, status=200)
                 
@@ -340,6 +342,7 @@ class EditProductView(APIView):
                 price = int(form.cleaned_data["price"])
                 currency_type = form.cleaned_data["currency_type"]
                 image = form.cleaned_data.get("image", None)
+                condition = form.cleaned_data["condition"]
 
                 prd = products.objects.filter(id=id, user=user).first()
                 if not prd:
@@ -349,6 +352,7 @@ class EditProductView(APIView):
                 prd.discription = discription
                 prd.price = price
                 prd.currency_type = currency_type
+                prd.condition = condition
 
                 # set new image if exist
                 if image:
@@ -378,7 +382,7 @@ class GetPrdComment(APIView):
             if not prd:
                 return Response({"result": False, "error": "Product not found!"}, status=404)
             
-            comments = ProductComment.objects.all()[page*3:(page+1)*3]
+            comments = ProductComment.objects.filter(product=prd)[page*3:(page+1)*3]
 
             comments_data = [{"text":comment.text, "user":comment.user.username} for comment in comments]
             return Response({"result": True, "comments": comments_data}, status=200)
@@ -392,8 +396,6 @@ class AddProductComment(APIView):
         try:
             text = request.data.get('text', None)
             id = request.data.get('id', None)
-            print(text)
-            print(id)
             if not text or not id:
                 return Response({"result": False, "error": "Invalid data!"}, status=400)
             

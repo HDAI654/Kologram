@@ -5,12 +5,12 @@ import axios from "axios";
 import baseURL from "../BaseURL";
 import defaultImage from "../DefaultImage";
 import "@/public/myPrd.css";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import getCookie from "../getCookie";
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import EditProductModal from "./EditPrdModal";
+import '@/public/entry-styles.css'
 
 const MySwal = withReactContent(Swal);
 
@@ -86,6 +86,7 @@ function MyProductPage() {
       formData.append("discription", selectedProduct.discription || selectedProduct.description || "");
       formData.append("price", selectedProduct.price.toString());
       formData.append("currency_type", selectedProduct.currency_type);
+      formData.append("condition", selectedProduct.condition);
 
       if (selectedProduct.image) {
         formData.append("image", selectedProduct.image);
@@ -200,18 +201,6 @@ function MyProductPage() {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
 
       <EditProductModal
         key={modalKey}
@@ -230,7 +219,7 @@ function MyProductPage() {
         {chunkedProducts.map((group, rowIndex) => (
           <div className="row w-100" key={rowIndex}>
             {group.map((v, i) => (
-              <div className={`col-lg-6 col-md-12 col-sm-12 py-2 d-flex align-items-center rounded-5 mt-3 bg-light ${isSmallScreen === 2 && "justify-content-center"}`} id="myprd_div" key={i}>
+              <div className={`col-lg-6 col-md-12 col-sm-12 py-2 d-flex align-items-center rounded-5 mt-3 bg-light ${isSmallScreen === 2 && "justify-content-center"} scale-in`} id="myprd_div" key={i}>
                 { isSmallScreen!==2 && <img
                   src={v.image === null ? defaultImage : baseURL + v.image}
                   className="img-fluid ml-1"

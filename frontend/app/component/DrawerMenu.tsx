@@ -5,8 +5,7 @@ import baseURL from "../BaseURL";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import getCookie from "../getCookie";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
@@ -48,19 +47,6 @@ export default function Sidebar() {
       <button className="btn text-light fs-1 m-3" style={{width:"65px"}} data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"> ☰ </button>
 
       <div className="offcanvas offcanvas-start rounded-end-3 " tabIndex="-1" id="sidebarMenu">
-
-        <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="dark"
-              />
 
         <div className="offcanvas-header">
           <h5 className="offcanvas-title ml-0">Menu</h5>

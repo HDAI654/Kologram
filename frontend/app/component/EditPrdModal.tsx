@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import baseURL from "../BaseURL";
 import defaultImage from "../DefaultImage";
 import currencyChoices from "../currency_choices"; 
+import '@/public/entry-styles.css'
 
 interface EditProductModalProps {
   show: boolean;
@@ -55,7 +56,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             }}></button>
           </div>
 
-          <div className="modal-body">
+          <div className="modal-body slide-up">
             <div className="mb-3">
               <label className="form-label">Name</label>
               <input
@@ -104,6 +105,20 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 {currencyChoices.map((value, index) => (
                     <option value={value[0]} key={index}>{value[1]}</option>
                 ))}
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Product Condition</label>
+              <select
+                className="form-select"
+                value={product.condition}
+                onChange={(e) =>
+                  setProduct({ ...product, condition: e.target.value })
+                }
+              >
+                <option value={"New"}>New</option>
+                <option value={"Used"}>Used</option>
               </select>
             </div>
             

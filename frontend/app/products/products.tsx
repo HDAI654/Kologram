@@ -6,8 +6,7 @@ import baseURL from "../BaseURL";
 import Loading_component from "../component/Loading";
 import Prd from "../component/prd";
 import Sidebar from "../component/DrawerMenu";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
@@ -108,18 +107,6 @@ function Products() {
   return (
   <>
     <Sidebar />
-    <ToastContainer
-      position="top-right"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="dark"
-    />
     <div className="container-fluid py-3">
       {error && <div className="alert alert-danger text-center h1 text-wrap" role="alert">Error : {error}</div>}
       <div className="input-group p-4 mb-3 text-wrap">
@@ -145,6 +132,7 @@ function Products() {
                 image={product.image}
                 stars={product.stars}
                 likes={product.likes}
+                condition={product.condition}
               />
             </div>
           ))}

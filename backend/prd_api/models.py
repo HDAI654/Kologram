@@ -33,6 +33,7 @@ class products(models.Model):
     image = models.ImageField(upload_to="files/images/", null=True)
     stars = models.IntegerField(null=True, default=0)
     likes = models.IntegerField(null=True, default=0)
+    condition = models.CharField(max_length=25, null=False, default="New")
 
 class ProductStars(models.Model):
     product = models.ForeignKey(products, on_delete=models.CASCADE)

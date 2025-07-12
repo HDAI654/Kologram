@@ -5,8 +5,7 @@ import axios from "axios";
 import baseURL from "../BaseURL";
 import { useRouter } from "next/navigation";
 import Loading_component from "../component/Loading";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import getCookie from "../getCookie";
 
 axios.defaults.baseURL = baseURL;
@@ -95,18 +94,6 @@ function Reg_component({setPage}:{setPage:Function}) {
 
   return (
     <div className="container-fluid vh-100 bg-dark">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
       <div className="row justify-content-center align-items-center min-vh-100">
         <div className="col-lg-4 col-md-6 col-sm-8 mx-auto mt-5 rounded-5 bg-dark d-flex flex-column justify-content-between" style={{ height: "80vh", boxShadow:"0px 0px 20px 2px rgba(255, 255, 255, 0.8)" }}>
 

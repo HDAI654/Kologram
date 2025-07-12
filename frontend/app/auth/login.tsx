@@ -5,8 +5,7 @@ import axios from "axios";
 import baseURL from "../BaseURL";
 import { useRouter } from "next/navigation";
 import Loading_component from "../component/Loading";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import getCookie from "../getCookie";
 
 axios.defaults.baseURL = baseURL;
