@@ -16,9 +16,10 @@ interface PrdProps {
   stars: number;
   likes: number;
   condition: string;
+  category: string;
 }
 
-function Prd({ prd_id, name, description, price, currency_type, image, stars, likes, condition }: PrdProps) {
+function Prd({ prd_id, name, description, price, currency_type, image, stars, likes, condition, category }: PrdProps) {
   if (image) {
     image = baseURL + image;
   }
@@ -43,6 +44,9 @@ function Prd({ prd_id, name, description, price, currency_type, image, stars, li
           </span>
           <span className="badge bg-dark rounded-5 text-wrap ms-2">
             condition: {condition}
+          </span>
+          <span className="badge bg-dark rounded-5 text-wrap ms-2">
+            category: {category}
           </span>
           
         </h5>

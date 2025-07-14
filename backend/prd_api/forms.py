@@ -8,6 +8,7 @@ class add_prd(forms.Form):
     currency_type = forms.CharField(max_length=20, required=True)
     image = forms.ImageField(required=False)
     condition = forms.CharField(max_length=25, required=True)
+    category = forms.CharField(max_length=25, required=True)
 
 class edit_prd(forms.Form):
     id = forms.IntegerField(required=True)
@@ -17,3 +18,4 @@ class edit_prd(forms.Form):
     currency_type = forms.CharField(max_length=20, required=True)
     image = forms.ImageField(required=False)
     condition = forms.CharField(max_length=25, required=True)
+    category = forms.CharField(max_length=25, required=True)

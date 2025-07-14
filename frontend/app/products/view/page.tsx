@@ -367,6 +367,9 @@ function Viewprd() {
                   )}
                 </span>
               </h2>
+              <p className="text-left text-wrap text-dark h5 mb-2">
+                category: {info.category}
+              </p>
 
               <h5 className="text-left text-wrap text-dark">
                 {info.price} {info.currency_type} 

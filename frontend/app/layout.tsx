@@ -1,15 +1,15 @@
-import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer } from 'react-toastify';
-import '@/public/scroll-styles.css'
+import { ThemeProvider } from "./contex/ThemeContext";
+import "@/public/scroll-styles.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "react-toastify/dist/ReactToastify.css"
+import { ToastContainer } from 'react-toastify';;
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{backgroundColor:"#212529"}}>
+      <body>
         <ToastContainer
                 position="top-right"
                 autoClose={3000}
@@ -22,7 +22,10 @@ export default function RootLayout({
                 pauseOnHover
                 theme="dark"
               />
-        {children}
+
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

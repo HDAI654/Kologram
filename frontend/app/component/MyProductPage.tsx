@@ -87,6 +87,7 @@ function MyProductPage() {
       formData.append("price", selectedProduct.price.toString());
       formData.append("currency_type", selectedProduct.currency_type);
       formData.append("condition", selectedProduct.condition);
+      formData.append("category", selectedProduct.category);
 
       if (selectedProduct.image) {
         formData.append("image", selectedProduct.image);

@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
 from .forms import add_prd, edit_prd
+from .Choise_Data import *
 
 class get_products(APIView):
     def get(self, request):
@@ -11,6 +12,7 @@ class get_products(APIView):
             page = request.query_params.get('page', None)
             product_id = request.query_params.get("id", None)
             by_user = request.query_params.get("by_user", None)
+            category = request.query_params.get("category", None)
 
             if page != None :
                 page = int(page)
@@ -28,6 +30,10 @@ class get_products(APIView):
                     search_text = str(search_text)
                     product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text))[page*6:(page+1)*6]
             
+            elif category != None :
+                category = str(category)
+                product_qs = products.objects.filter(category=category)
+
             elif product_id != None :
                 product_id = int(product_id)
                 product_qs = products.objects.filter(id=product_id)
@@ -49,6 +55,7 @@ class get_products(APIView):
                     "stars": p.stars if p.stars else 0,
                     "likes": p.likes if p.likes else 0,
                     "condition": p.condition,
+                    "category": p.category,
                 }
                 for p in product_qs
             ]
@@ -293,8 +300,9 @@ class AddPrd(APIView):
                     currency_type = form.cleaned_data["currency_type"]
                     image = form.cleaned_data["image"]
                     condition = form.cleaned_data["condition"]
+                    category = form.cleaned_data["category"]
 
-                    prd = products.objects.create(user=user, name=name, discription=discription, price=price, currency_type=currency_type, image=image, condition=condition)
+                    prd = products.objects.create(user=user, name=name, discription=discription, price=price, currency_type=currency_type, image=image, condition=condition, category=category)
                     prd.save()
                     return Response({"result":True}, status=200)
                 
@@ -343,6 +351,7 @@ class EditProductView(APIView):
                 currency_type = form.cleaned_data["currency_type"]
                 image = form.cleaned_data.get("image", None)
                 condition = form.cleaned_data["condition"]
+                category = form.cleaned_data["category"]
 
                 prd = products.objects.filter(id=id, user=user).first()
                 if not prd:
@@ -353,6 +362,7 @@ class EditProductView(APIView):
                 prd.price = price
                 prd.currency_type = currency_type
                 prd.condition = condition
+                prd.category = category
 
                 # set new image if exist
                 if image:
@@ -396,6 +406,10 @@ class AddProductComment(APIView):
         try:
             text = request.data.get('text', None)
             id = request.data.get('id', None)
+
+            if not request.user.is_authenticated:
+                return Response({"result": False, "error": "Login required to add a comment!"}, status=401)
+
             if not text or not id:
                 return Response({"result": False, "error": "Invalid data!"}, status=400)
             
@@ -411,3 +425,20 @@ class AddProductComment(APIView):
         except Exception as e:
             logger.error(f"error in AddProductComment: {e}")
             return Response({"result": False, "error": "Server error."}, status=500)
+        
+class getChoiseData(APIView):
+    def get(self, request):
+        try:
+            if not request.user.is_authenticated:
+                return Response({"result": False, "error": "Login required!"}, status=401)
+
+            data = {
+                "currency_type": CURRENCY_CHOICES,
+                "categories": CATEGORIES_CHOICES
+            }
+            return Response({"result": True, "data": data}, status=200)
+
+        except Exception as e:
+            logger.error(f"error in getChoiseData: {e}")
+            return Response({"result": False, "error": "Server error."}, status=500)
+        

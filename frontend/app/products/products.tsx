@@ -133,6 +133,7 @@ function Products() {
                 stars={product.stars}
                 likes={product.likes}
                 condition={product.condition}
+                category={product.category}
               />
             </div>
           ))}

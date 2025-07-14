@@ -6,7 +6,7 @@ import axios from "axios";
 import baseURL from "../BaseURL";
 import { toast } from 'react-toastify';
 import getCookie from "../getCookie";
-import currencyChoices from "../currency_choices";
+import currencyChoices, {category_choices} from "../currency_choices";
 import '@/public/entry-styles.css'
 
 axios.defaults.baseURL = baseURL;
@@ -105,6 +105,13 @@ function AddProductPage({hidden=true}:{hidden:boolean}) {
               <select className="form-select" id="condition" name="condition">
                 <option value={"New"}>New</option>
                 <option value={"Used"}>Used</option>
+              </select>
+
+              <label htmlFor="category" className="form-label text-light mt-4 text-wrap" > Category </label>
+              <select className="form-select" id="category" name="category">
+                {category_choices.map((value, index) => (
+                  <option value={value[0]} key={index}>{value[1]}</option>
+                ))}
               </select>
               
               

@@ -9,7 +9,7 @@ class get_auth(APIView):
     def get(self, request):
         try:
             if request.user.is_authenticated:
-                return Response({"auth":True})
+                return Response({"auth":True, "username":request.user.username})
             return Response({"auth":False})
         except Exception as e:
             logger.error(f"error in get_auth: {e}")

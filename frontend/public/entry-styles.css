@@ -42,6 +42,18 @@
   animation: SlideUp 0.5s ease-out forwards;
 }
 
+@keyframes SlideLeft {
+  0% {
+    transform: translateX(60px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+.slide-left {
+  animation: SlideLeft 0.5s ease-out forwards;
+}
+
 
 
 

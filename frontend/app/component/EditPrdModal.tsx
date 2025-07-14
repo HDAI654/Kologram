@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import baseURL from "../BaseURL";
 import defaultImage from "../DefaultImage";
-import currencyChoices from "../currency_choices"; 
+import currencyChoices, {category_choices} from "../currency_choices"; 
 import '@/public/entry-styles.css'
 
 interface EditProductModalProps {
@@ -119,6 +119,21 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               >
                 <option value={"New"}>New</option>
                 <option value={"Used"}>Used</option>
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Category</label>
+              <select
+                className="form-select"
+                value={product.category}
+                onChange={(e) =>
+                  setProduct({ ...product, category: e.target.value })
+                }
+              >
+                {category_choices.map((value, index) => (
+                    <option value={value[0]} key={index}>{value[1]}</option>
+                ))}
               </select>
             </div>
             

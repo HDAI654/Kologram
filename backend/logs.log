@@ -5,3 +5,7 @@
 2025-06-29 15:29:26,837 - ERROR - error in AddProductComment: 'tuple' object has no attribute 'text'
 2025-07-12 14:22:53,197 - ERROR - error in AddPrd: 'condition'
 2025-07-12 14:23:52,257 - ERROR - error in AddPrd: 'condition'
+2025-07-13 16:08:07,539 - ERROR - error in AddProductComment: Field 'id' expected a number but got <django.contrib.auth.models.AnonymousUser object at 0x7512326293d0>.
+2025-07-13 16:27:39,468 - ERROR - error in AddPrd: 'category'
+2025-07-13 16:28:23,369 - ERROR - error in AddPrd: 'category'
+2025-07-13 16:28:59,258 - ERROR - error in AddPrd: 'category'
