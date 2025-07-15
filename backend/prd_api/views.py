@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 from .forms import add_prd, edit_prd
 from .Choise_Data import *
+from django.contrib.auth.models import User
 
 class get_products(APIView):
     def get(self, request):
@@ -65,6 +66,91 @@ class get_products(APIView):
         except Exception as e:
             logger.error(f"error in get_products: {e}")
             return Response({"products": False}, status=500)
+
+class search_products(APIView):
+    def get(self, request):
+        try:
+            category = request.query_params.get("category", None)
+            search_text = request.query_params.get("search_text", None)
+            page = request.query_params.get("page", None)
+
+            if page == None:
+                return Response({"products": False, "error": "page parameter is required"}, status=400)
+
+            # validate page value
+            try:
+                page = int(page)
+            except:
+                return Response({"products": False, "error": "page parameter is invalid"}, status=400)
+
+            if category == None and search_text == None:
+                return Response({"products": False, "error": "category and search_text parameters are required"}, status=400)
+
+            # search in a category
+            if category != None and search_text == None:
+                try:
+                    category = str(category)
+                except:
+                    return Response({"products": False, "error": "category parameter is invalid"}, status=400)
+                
+                if category not in [c[0] for c in CATEGORIES_CHOICES]:
+                    return Response({"products": False, "error": "category parameter is invalid"}, status=400)
+
+                product_qs = products.objects.filter(category=category)[page*6:(page+1)*6]
+            
+            # search in a product name or discription
+            elif search_text != None and category == None:
+                try:
+                    search_text = str(search_text)
+                except:
+                    return Response({"products": False, "error": "search_text parameter is invalid"}, status=400)
+                
+                product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text))[page*6:(page+1)*6]
+            
+            
+            # search with both of category and search_text
+            else:
+                try:
+                    category = str(category)
+                    search_text = str(search_text)
+                except:
+                    return Response({"products": False, "error": "category or search_text parameters are invalid"}, status=400)
+
+                if category not in [c[0] for c in CATEGORIES_CHOICES]:
+                    return Response({"products": False, "error": "category parameter is invalid"}, status=400)
+
+                product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text), category=category)[page*6:(page+1)*6]
+            
+            # get number of registered users
+            try:
+                users_count = User.objects.count()
+                if users_count == 0:
+                    return Response({"products": False, "error": "Couldn't find nothing in site"}, status=500)
+            except:
+                return Response({"products": False, "error": "Couldn't find nothing in site"}, status=500)
+            
+            # prepare data
+            data = [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "description": p.discription,
+                    "price": p.price,
+                    "currency_type": p.currency_type,
+                    "image": p.image.url if p.image else None,
+                    "stars": p.stars // users_count if p.stars else 0,
+                    "likes": p.likes if p.likes else 0,
+                    "condition": p.condition,
+                    "category": p.category,
+                }
+                for p in product_qs
+            ]
+
+            return Response({"products": data}, status=200)
+
+        except Exception as e:
+            logger.error(f"error in search_products: {e}")
+            return Response({"products": False, "error":"error in searching"}, status=500)
 
 class HasUserStarredProduct(APIView):
     def get(self, request):

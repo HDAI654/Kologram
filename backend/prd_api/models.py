@@ -12,7 +12,7 @@ class products(models.Model):
     stars = models.IntegerField(null=True, default=0)
     likes = models.IntegerField(null=True, default=0)
     condition = models.CharField(max_length=25, null=False, default="New")
-    category = models.CharField(max_length=25, null=False, default="Others", choices=CATEGORIES_CHOICES)
+    category = models.CharField(max_length=25, null=False, default="others", choices=CATEGORIES_CHOICES)
 
 class ProductStars(models.Model):
     product = models.ForeignKey(products, on_delete=models.CASCADE)

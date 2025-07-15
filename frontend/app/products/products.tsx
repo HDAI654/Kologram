@@ -106,7 +106,6 @@ function Products() {
 
   return (
   <>
-    <Sidebar />
     <div className="container-fluid py-3">
       {error && <div className="alert alert-danger text-center h1 text-wrap" role="alert">Error : {error}</div>}
       <div className="input-group p-4 mb-3 text-wrap">

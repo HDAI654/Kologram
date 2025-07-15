@@ -45,7 +45,7 @@ export default function Sidebar({isLogin=false, username="Guest", screenMode}:{i
   return (
     <div className="row">  
       { screenMode === "lt" && (
-        <button className="btn fs-1 m-3" style={{width:"65px"}} data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"> ☰ </button>
+        <button className="btn fs-1 mx-3" style={{width:"65px"}} data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"> ☰ </button>
       ) }        
       
 

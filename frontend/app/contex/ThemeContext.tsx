@@ -16,7 +16,7 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
 
   if (typeof document !== "undefined") {
     document.documentElement.setAttribute("data-bs-theme", theme);

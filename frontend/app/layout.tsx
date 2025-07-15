@@ -1,5 +1,4 @@
 import { ThemeProvider } from "./contex/ThemeContext";
-import "@/public/scroll-styles.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css"
 import { ToastContainer } from 'react-toastify';;
