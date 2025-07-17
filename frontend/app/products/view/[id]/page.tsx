@@ -6,6 +6,59 @@ import baseURL from "@/app/BaseURL";
 import MainNavbar from "@/app/component/MainNav";
 import "@/public/MainNav.css"
 
+
+// create metadata
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const { id } = params;
+  try {
+    const res = await fetch(`${baseURL}/prd-api/get_products?id=${id}`, {
+      next: { revalidate: 1200 },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch");
+
+    const data = await res.json();
+    const product = data.products?.[0];
+
+    if (!product) {
+      return {
+        title: "Product Not Found",
+        description: "This product does not exist or has been removed.",
+      };
+    }
+
+    const imageUrl = product.image ? `${baseURL}${product.image}` : defaultImage;
+
+    return {
+      title: `${product.name} | Buy Online at the Best Price`,
+      description: `Details, price, and specifications of ${product.name} | Category: ${product.category} | Condition: ${product.condition} | Price: ${product.price} ${product.currency_type}`,
+      openGraph: {
+        title: product.name,
+        description: product.description?.slice(0, 150) || "",
+        url: `https://kologram.com/products/view/${product.id}`,
+        type: "article",
+        images: [
+          {
+            url: imageUrl,
+            alt: product.name,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: product.name,
+        description: product.description?.slice(0, 150) || "",
+        images: [imageUrl],
+      },
+    };
+  } catch (error) {
+    return {
+      title: "Error Fetching Product Data",
+      description: "There was an issue retrieving information about this product.",
+    };
+  }
+}
+
 async function getProductData(id: string) {
   const res = await fetch(`${baseURL}/prd-api/get_products?id=${id}`, {
     next: { revalidate: 1200 } // ISR every 20 minutes (1200 seconds)
