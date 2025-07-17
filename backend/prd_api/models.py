@@ -10,7 +10,6 @@ class products(models.Model):
     currency_type = models.CharField(max_length=20, choices=CURRENCY_CHOICES, null=False)
     image = models.ImageField(upload_to="files/images/", null=True)
     stars = models.IntegerField(null=True, default=0)
-    likes = models.IntegerField(null=True, default=0)
     condition = models.CharField(max_length=25, null=False, default="New")
     category = models.CharField(max_length=25, null=False, default="others", choices=CATEGORIES_CHOICES)
 
@@ -22,13 +21,6 @@ class ProductStars(models.Model):
         unique_together = ('product', 'user')
 
 class ProductInCart(models.Model):
-    product = models.ForeignKey(products, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('product', 'user')
-
-class ProductLikes(models.Model):
     product = models.ForeignKey(products, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 

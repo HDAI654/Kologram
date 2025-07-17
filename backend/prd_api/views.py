@@ -1,5 +1,5 @@
 from logger import logger
-from .models import products, ProductStars, ProductInCart, ProductLikes, ProductComment
+from .models import products, ProductStars, ProductInCart, ProductComment
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
@@ -63,7 +63,6 @@ class get_products(APIView):
                     "currency_type": p.currency_type,
                     "image": p.image.url if p.image else None,
                     "stars": p.stars // users_count if p.stars else 0,
-                    "likes": p.likes if p.likes else 0,
                     "condition": p.condition,
                     "category": p.category,
                 }
@@ -158,7 +157,6 @@ class search_products(APIView):
                     "currency_type": p.currency_type,
                     "image": p.image.url if p.image else None,
                     "stars": p.stars // users_count if p.stars else 0,
-                    "likes": p.likes if p.likes else 0,
                     "condition": p.condition,
                     "category": p.category,
                 }
@@ -315,81 +313,6 @@ class ChangeInCart(APIView):
         
         except Exception as e:
             logger.error(f"Error in ChangeInCart : {e}")
-            return Response({"status": "ERROR", "msg": str(e)}, status=500)
-
-class HasUserLikedProduct(APIView):
-    def get(self, request):
-        try:
-            prd_id = request.query_params.get('prd_ID')
-            user = request.user
-            if user.is_authenticated:
-                if not prd_id:
-                    return Response({"status": "ERROR", "error": "prd_ID parameter is required"}, status=400)
-                
-                try:
-                    prd_id = int(prd_id)
-                except:
-                    return Response({"status": "ERROR", "error": "Invalid product ID !"}, status=400)
-
-                if not products.objects.filter(id=prd_id).exists():
-                    return Response({"status": "ERROR", "error": "Invalid product !"}, status=404)
-
-                status = ProductLikes.objects.filter(product_id=prd_id, user=user).exists()
-
-                return Response({"status": status})
-            
-            return Response({"status": "NO_LOGIN", "msg":"Login required !"}, status=401)
-        
-        except Exception as e:
-            logger.error(f"error in HasUserLikedProduct: {e}")
-            return Response({"status": "ERROR"}, status=500)
-
-class ChangeLike(APIView):
-    def post(self, request):
-        try:
-            prd_id = request.query_params.get("prd_ID")
-            opt = request.query_params.get("opt")
-            user = request.user
-
-            if user.is_authenticated:
-                if prd_id is None:
-                    return Response({"status": "ERROR", "msg": "prd_ID parameter is required"}, status=400)
-                if opt not in ["ADD", "DEL"]:
-                    return Response({"status": "ERROR", "msg": "The value of opt is not correct"}, status=400)
-                
-                try:
-                    prd_id = int(prd_id)
-                except:
-                    return Response({"status": "ERROR", "msg": "Invalid Product ID."}, status=400)
-
-                try:
-                    product = products.objects.get(id=prd_id)
-                except products.DoesNotExist:
-                    return Response({"status": "ERROR", "msg": "Product not found."}, status=404)
-
-
-                if opt == "ADD":
-                    obj, created = ProductLikes.objects.get_or_create(user=user, product=product)
-                    if created:
-                        product.likes += 1
-                        product.save()
-                        return Response({"status": "OK", "msg": "Star added."}, status=200)
-                    else:
-                        return Response({"status": "ERROR", "msg": "Already starred."}, status=400)
-
-                elif opt == "DEL":
-                    deleted, _ = ProductLikes.objects.filter(user=user, product=product).delete()
-                    if deleted:
-                        product.likes = max(product.stars - 1, 0)
-                        product.save()
-                        return Response({"status": "OK", "msg": "Star removed."})
-                    else:
-                        return Response({"status": "ERROR", "msg": "No star to remove."}, status=400)
-            
-            return Response({"status": "NO_LOGIN", "msg": "Login required to rate products !"}, status=401)
-        
-        except Exception as e:
-            logger.error(f"error in ChangeLike: {e}")
             return Response({"status": "ERROR", "msg": str(e)}, status=500)
 
 class AddPrd(APIView):

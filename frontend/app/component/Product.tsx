@@ -71,11 +71,6 @@ function Product({ info }: { info: ProductInfo }) {
                   />
                 ))}
               </div>
-
-              <div className="text-danger d-flex align-items-center" title={`${info.likes} likes`}>
-                <i className="fas fa-heart me-1"></i>
-                <span>{info.likes}</span>
-              </div>
             </div>
           </div>
         </div>

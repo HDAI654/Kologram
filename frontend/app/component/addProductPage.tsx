@@ -8,6 +8,8 @@ import { toast } from 'react-toastify';
 import getCookie from "../getCookie";
 import currencyChoices, {category_choices} from "../currency_choices";
 import '@/public/entry-styles.css'
+import '@/public/MainNav.css'
+import ThemeToggleButton from "./ThemeNavbar";
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
@@ -80,34 +82,36 @@ function AddProductPage({hidden=true}:{hidden:boolean}) {
         <div className="row">
           <div className="col-12">
             <form className="form-group fade-in-up" ref={formRef} onSubmit={handleAddPrd}>
-              <label htmlFor="name" className="form-label text-light mt-4 text-wrap" > Name </label>
+              <label htmlFor="name" className="form-label mt-4 text-wrap" > Name </label>
               <input type="text" className="form-control mb-3 text-wrap" id="name" placeholder="Enter the name of your product" name="name" required />
 
-              <label htmlFor="discription" className="form-label text-light mt-4 text-wrap" >
+              <label htmlFor="discription" className="form-label mt-4 text-wrap" >
                 Discription  {info_markdown_mode === "0" && <span className="badge bg-light text-dark rounded-5" onClick={handleShowMarkdownClick}>{info_markdown === "0" ? 'show markdown' : 'show text'}</span>}
               </label>
               {info_markdown_mode === "0" && info_markdown === "0" && <textarea className="form-control mb-3 text-wrap" id="discription" placeholder="Enter discription of your product" style={{minHeight:"400px"}} name="discription" value={discriptionText} onChange={((v) => {setDiscriptionText(v.target.value)})} required />}
-              {info_markdown_mode === "0" && info_markdown === "1" && <div className="bg-light rounded-3 p-1" style={{height:"400px"}}><ReactMarkdown>{discriptionText}</ReactMarkdown></div>}
-              {info_markdown_mode === "1" && <div className="d-flex"><textarea className="form-control mb-3 text-wrap w-50" id="discription" placeholder="Enter discription of your product" style={{minHeight:"400px"}} name="discription" value={discriptionText} onChange={((v) => {setDiscriptionText(v.target.value)})} required /><div className="bg-light rounded-3 p-1 w-50" style={{height:"400px"}}><ReactMarkdown>{discriptionText}</ReactMarkdown></div></div>}
+              {info_markdown_mode === "0" && info_markdown === "1" && <div className="bg-body border-contrast text-contrast rounded-3 p-1" style={{height:"400px"}}><ReactMarkdown>{discriptionText}</ReactMarkdown></div>}
+              {info_markdown_mode === "1" && <div className="d-flex"><textarea className="form-control border border-1 border-contrast text-wrap w-50" id="discription" placeholder="Enter discription of your product" style={{minHeight:"400px"}} name="discription" value={discriptionText} onChange={((v) => {setDiscriptionText(v.target.value)})} required /><div className="bg-body border border-1 border-contrast text-contrast rounded-3 p-1 w-50" style={{minHeight:"400px", overflowY:"auto"}}><ReactMarkdown>{discriptionText}</ReactMarkdown></div></div>}
 
 
-              <label htmlFor="price" className="form-label text-light mt-4 text-wrap" > Price </label>
+              <label htmlFor="price" className="form-label mt-4 text-wrap" > Price </label>
               <input type="number" className="form-control mb-3 text-wrap" id="price" placeholder="Enter the price of your product" name="price" required />
 
-              <label htmlFor="currency_type" className="form-label text-light mt-4 text-wrap" > Currency Type </label>
+              <label htmlFor="currency_type" className="form-label mt-4 text-wrap" > Currency Type </label>
               <select className="form-select" id="currency_type" name="currency_type">
                 {currencyChoices.map((value, index) => (
                   <option value={value[0]} key={index}>{value[1]}</option>
                 ))}
               </select>
 
-              <label htmlFor="condition" className="form-label text-light mt-4 text-wrap" > Product Condition </label>
+              <ThemeToggleButton screenMode="lg"/>
+
+              <label htmlFor="condition" className="form-label mt-4 text-wrap" > Product Condition </label>
               <select className="form-select" id="condition" name="condition">
                 <option value={"New"}>New</option>
                 <option value={"Used"}>Used</option>
               </select>
 
-              <label htmlFor="category" className="form-label text-light mt-4 text-wrap" > Category </label>
+              <label htmlFor="category" className="form-label mt-4 text-wrap" > Category </label>
               <select className="form-select" id="category" name="category">
                 {category_choices.map((value, index) => (
                   <option value={value[0]} key={index}>{value[1]}</option>
@@ -115,12 +119,12 @@ function AddProductPage({hidden=true}:{hidden:boolean}) {
               </select>
               
               
-              <label htmlFor="image" className="form-label text-light mt-4 text-wrap" > Image </label>
+              <label htmlFor="image" className="form-label mt-4 text-wrap" > Image </label>
               <input type="file" className="form-control mb-3 text-wrap" id="image" name="image" />
 
               { submitLoad === false ? <button type="submit" className="btn btn-success mb-5 w-100">Add</button> : <button type="submit" className="btn btn-success mb-5 w-100" disabled>
                 <span
-                  className="spinner-border spinner-border-sm text-light"
+                  className="spinner-border spinner-border-sm "
                   role="status"
                   aria-hidden="true"
                 ></span></button> }

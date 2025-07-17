@@ -64,12 +64,15 @@ async function Viewprd({ params }: { params: { id: string } }) {
             <h1 className="text-primary mt-4 text-wrap h2">
               {info.name} 
             </h1>
-            <span className="badge rounded-5 bg-body text-contrast text-wrap ms-2 display-4 h1">
-              ★ {info.stars}
-            </span>
-            <span className="badge rounded-5 bg-body text-contrast text-wrap ms-2 display-4 h1">
-              ♥️ {info.likes}
-            </span>
+            <div className="text-warning" title={`${info.stars} stars`}>
+                {[...Array(5)].map((_, i) => (
+                  <i
+                    key={i}
+                    className={i < Math.round(info.stars) ? "fas fa-star" : "far fa-star"}
+                    style={{ color: i < Math.round(info.stars) ? "#f5c518" : "#ddd" }}
+                  />
+                ))}
+             </div>
             <p className="text-left text-wrap h5 mb-2 text-body">
               category: {info.category}
             </p>
