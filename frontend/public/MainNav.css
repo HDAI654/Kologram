@@ -21,3 +21,11 @@
 [data-bs-theme="dark"] .text-body {
   color: #212529 !important; 
 }
+
+[data-bs-theme="light"] .text-contrast {
+  color: #212529 !important; 
+}
+
+[data-bs-theme="dark"] .text-contrast {
+  color: #f8f9fa !important;
+}

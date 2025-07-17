@@ -46,6 +46,14 @@ class get_products(APIView):
             else :
                 product_qs = products.objects.all()
 
+            # get number of registered users
+            try:
+                users_count = User.objects.count()
+                if users_count == 0:
+                    return Response({"products": False, "error": "Couldn't find nothing in site"}, status=500)
+            except:
+                return Response({"products": False, "error": "Couldn't find nothing in site"}, status=500)
+
             data = [
                 {
                     "id": p.id,
@@ -54,7 +62,7 @@ class get_products(APIView):
                     "price": p.price,
                     "currency_type": p.currency_type,
                     "image": p.image.url if p.image else None,
-                    "stars": p.stars if p.stars else 0,
+                    "stars": p.stars // users_count if p.stars else 0,
                     "likes": p.likes if p.likes else 0,
                     "condition": p.condition,
                     "category": p.category,
@@ -553,3 +561,18 @@ class getCategories(APIView):
         except Exception as e:
             logger.error(f"error in getCategories: {e}")
             return Response({"result": False, "error": "Server error."}, status=500)
+
+class AllProductIDs(APIView):
+    def get(self, request):
+        product_qs = products.objects.all()
+        data = [
+            {
+                "id": p.id,
+            }
+            for p in product_qs]
+
+        return Response({"products": data})
+
+
+
+
