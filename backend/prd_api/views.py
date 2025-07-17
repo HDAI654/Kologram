@@ -6,6 +6,7 @@ from django.db.models import Q
 from .forms import add_prd, edit_prd
 from .Choise_Data import *
 from django.contrib.auth.models import User
+import math
 
 class get_products(APIView):
     def get(self, request):
@@ -96,7 +97,7 @@ class search_products(APIView):
                 if category not in [c[0] for c in CATEGORIES_CHOICES]:
                     return Response({"products": False, "error": "category parameter is invalid"}, status=400)
 
-                product_qs = products.objects.filter(category=category)[page*6:(page+1)*6]
+                product_qs = products.objects.filter(category=category)
             
             # search in a product name or discription
             elif search_text != None and category == None:
@@ -105,7 +106,7 @@ class search_products(APIView):
                 except:
                     return Response({"products": False, "error": "search_text parameter is invalid"}, status=400)
                 
-                product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text))[page*6:(page+1)*6]
+                product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text))
             
             
             # search with both of category and search_text
@@ -119,7 +120,7 @@ class search_products(APIView):
                 if category not in [c[0] for c in CATEGORIES_CHOICES]:
                     return Response({"products": False, "error": "category parameter is invalid"}, status=400)
 
-                product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text), category=category)[page*6:(page+1)*6]
+                product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text), category=category)
             
             # get number of registered users
             try:
@@ -129,6 +130,16 @@ class search_products(APIView):
             except:
                 return Response({"products": False, "error": "Couldn't find nothing in site"}, status=500)
             
+            # get number of pages
+            try:
+                products_count = product_qs.count()
+                totalPages = math.ceil(products_count / 6)
+            except:
+                totalPages = 0
+
+            # slice products
+            product_qs = product_qs[page*6:(page+1)*6]
+
             # prepare data
             data = [
                 {
@@ -146,7 +157,7 @@ class search_products(APIView):
                 for p in product_qs
             ]
 
-            return Response({"products": data}, status=200)
+            return Response({"products": data, "totalPages":totalPages}, status=200)
 
         except Exception as e:
             logger.error(f"error in search_products: {e}")
@@ -486,7 +497,7 @@ class GetPrdComment(APIView):
         except Exception as e:
             logger.error(f"error in GetPrdComment: {e}")
             return Response({"result": False, "error": "Server error."}, status=500)
-            
+           
 class AddProductComment(APIView):
     def post(self, request):
         try:
@@ -528,3 +539,17 @@ class getChoiseData(APIView):
             logger.error(f"error in getChoiseData: {e}")
             return Response({"result": False, "error": "Server error."}, status=500)
         
+class getCategories(APIView):
+    def get(self, request):
+        try:
+            #if not request.user.is_authenticated:
+             #   return Response({"result": False, "error": "Login required!"}, status=401)
+
+            data = {
+                "categories": CATEGORIES_CHOICES
+            }
+            return Response({"result": True, "data": data}, status=200)
+
+        except Exception as e:
+            logger.error(f"error in getCategories: {e}")
+            return Response({"result": False, "error": "Server error."}, status=500)

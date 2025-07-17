@@ -1,0 +1,23 @@
+[data-bs-theme="light"] .border-contrast {
+  border-color: #000 !important; /* dark border */
+}
+
+[data-bs-theme="dark"] .border-contrast {
+  border-color: #fff !important; /* light border */
+}
+
+[data-bs-theme="light"] .bg-contrast {
+  background-color: #212529 !important; /* dark bg */
+}
+
+[data-bs-theme="dark"] .bg-contrast {
+  background-color: #f8f9fa !important; /* light bg */
+}
+
+[data-bs-theme="light"] .text-body {
+  color: #f8f9fa !important;
+}
+
+[data-bs-theme="dark"] .text-body {
+  color: #212529 !important; 
+}

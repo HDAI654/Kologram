@@ -12,3 +12,4 @@
 2025-07-15 17:07:41,295 - ERROR - error in search_products: integer division or modulo by zero
 2025-07-15 17:30:44,262 - ERROR - error in GetPrdComment: Field 'id' expected a number but got 'undefined'.
 2025-07-15 17:30:44,282 - ERROR - error in get_products: invalid literal for int() with base 10: 'undefined'
+2025-07-17 11:04:25,787 - ERROR - error in search_products: Negative indexing is not supported.

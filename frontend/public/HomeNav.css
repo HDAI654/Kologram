@@ -1,7 +1,0 @@
-[data-bs-theme="light"] .border-contrast {
-  border-color: #000 !important; /* dark border */
-}
-
-[data-bs-theme="dark"] .border-contrast {
-  border-color: #fff !important; /* light border */
-}

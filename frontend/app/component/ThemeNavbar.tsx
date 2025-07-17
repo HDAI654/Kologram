@@ -1,17 +1,19 @@
-"use client";
-import React from "react";
+'use client';
+
+import React, { useState, useEffect } from "react";
 import { toast } from 'react-toastify';
 import '@/public/entry-styles.css';
-import { useTheme } from "../contex/ThemeContext";
 
-function ThemeToggleButton({screenMode}:{screenMode:string}) {
-  const { theme, setTheme } = useTheme();
+function ThemeToggleButton({ screenMode }: { screenMode: string }) {
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   const handleThemeChange = () => {
     try {
-      setTheme(theme === "light" ? "dark" : "light");
+      const newTheme = theme === "light" ? "dark" : "light";
+      setTheme(newTheme);
+      document.documentElement.setAttribute("data-bs-theme", newTheme);
     } catch (error) {
-      toast.error("Error in setting theme");
+      toast.error("Error in toggle theme");
     }
   };
 

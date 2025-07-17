@@ -16,4 +16,5 @@ urlpatterns = [
     path('get-comments/', GetPrdComment.as_view()),
     path('add-comment/', AddProductComment.as_view()),
     path('getChoiseData/', getChoiseData.as_view()),
+    path('getCategories/', getCategories.as_view()),
 ]

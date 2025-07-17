@@ -1,4 +1,3 @@
-import { ThemeProvider } from "./contex/ThemeContext";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css"
 import { ToastContainer } from 'react-toastify';;
@@ -7,7 +6,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-bs-theme="dark">
       <body>
         <ToastContainer
                 position="top-right"
@@ -22,9 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 theme="dark"
               />
 
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );

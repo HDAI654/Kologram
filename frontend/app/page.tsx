@@ -1,152 +1,115 @@
-"use client";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { useEffect, useState, useRef } from "react";
-import axios from "axios";
 import baseURL from "./BaseURL";
-import { useRouter } from "next/navigation";
-import Loading_component from "./component/Loading";
-import HomeNavbar from "./component/homeNav";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
-import PrdSeachPage from "./component/PrdSearchPage";
+import MainNavbar from "./component/MainNav";
+import BannerSlider from "./component/BannerSlider";
+import type { Metadata } from "next";
 
-axios.defaults.baseURL = baseURL;
-axios.defaults.withCredentials = true;
 
-export default function Home() {
-  const router = useRouter();
-  const [load, setLoad] = useState(false);
-  const [error, setError] = useState("");
-  const [isLogin, setLogin] = useState(false);
-  const [screenMode, setscreenMode] = useState("lg");
-  const username = useRef("Guest");
-  const [searchValue, setSearchValue] = useState("");
+// Metadata
+export const metadata: Metadata = {
+  title: "Kologram | Online Shopping for Quality Products",
+  description: "Discover the best deals and premium products at Kologram. Shop electronics, fashion, home goods, and more with fast delivery and secure checkout.",
+  keywords: [
+    "Kologram",
+    "online shopping",
+    "buy products online",
+    "best ecommerce store",
+    "electronics",
+    "fashion",
+    "home essentials",
+    "free delivery",
+    "quality products",
+  ],
+  openGraph: {
+    title: "Kologram | Shop Smart, Live Better",
+    description: "Kologram is your go-to destination for top-notch products and unbeatable prices. Start shopping today.",
+    url: "https://kologram.com",
+    siteName: "Kologram",
+    images: [
+      {
+        url: "https://kologram.com/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Kologram Online Store",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kologram | Premium Online Store",
+    description: "Shop quality products at Kologram with fast delivery and secure checkout.",
+    creator: "@kologram",
+    images: ["https://kologram.com/og-image.jpg"],
+  },
+};
 
-  useEffect(() => {
-    document.title = "Kologram - Home";
 
-    handleResize();
-    window.addEventListener("resize", handleResize)
+// Fetch banners from the API
+async function getBanners() {
+  try {
+    const res = await fetch(baseURL + "/ad/get-banners", {
+      next: {
+        revalidate: 43200, // ISR every 12 hours
+      },
+    });
 
-    axios.get("/auth/get_auth/")
-    .then((res) => {
-      if (res.data.auth === false) {
-        setLogin(false);
-      } else {
-        username.current = res.data.username;
-        setLoad(true);
-        setLogin(true);
-      }
-    })
-    .catch((err) => setLoad(false));
-    
-  }, []);
-
-  const handleResize = () => {
-    let width = window.innerWidth
-    if (width < 400) {
-      setscreenMode("lt");
-      return;
-    }else if (width < 530) {
-      setscreenMode("sm");
-      return;
-    }else if (width < 940) {
-      setscreenMode("md");
-      return;
-    }else {
-      setscreenMode("lg");
-      return;
+    if (!res.ok) {
+      return [];
     }
-  };
 
+    const data = await res.json();
 
-  if (load === false) {
-    return (
-      <Loading_component />
-    );
+    if (!data || data.error || !Array.isArray(data.banners)) {
+      return [];
+    }
+
+    return data.banners;
+  } catch (error) {
+    return [];
   }
+}
+
+// HomePage component
+export default async function HomePage() {
+  const banners = await getBanners();
 
   return (
     <>
-      {/* Navbars */}
-      <HomeNavbar screenMode={screenMode} isLogin={isLogin} username={username.current} setSearchValue={setSearchValue} />
+      {/* Top Navbar */}
+      <MainNavbar />
 
       {/* Main Content */}
-      <div style={{ marginTop: "90px", marginBottom: "90px" }}>
-        
-        
+      <main style={{ paddingTop: '100px', paddingBottom: '100px'  }}>
 
-        { searchValue === "" ? (
-          // Slider to show the best products and advertisements
-          <div className="container position-relative">
-            <Swiper
-              modules={[Autoplay, Pagination, Navigation]}
-              autoplay={{ delay: 3000 }}
-              pagination={{ clickable: true }}
-              navigation={screenMode !== "sm" ? true : false}
-              loop={true}
-              spaceBetween={20}
-              slidesPerView={1}
-              className="rounded-4 shadow"
-            >
-
-              <SwiperSlide>
-                <img
-                  src="https://picsum.photos/id/1015/800/400"
-                  alt="Slide 1"
-                  className="img-fluid w-100 rounded-4"
-                />
-              </SwiperSlide>
-              <SwiperSlide>
-                <img
-                  src="https://picsum.photos/id/1016/800/400"
-                  alt="Slide 2"
-                  className="img-fluid w-100 rounded-4"
-                />
-              </SwiperSlide>
-              <SwiperSlide>
-                <img
-                  src="https://picsum.photos/id/1018/800/400"
-                  alt="Slide 3"
-                  className="img-fluid w-100 rounded-4"
-                />
-              </SwiperSlide>
-
-            </Swiper>
-          </div>
-        ) : <PrdSeachPage searchValue={searchValue} setSearchValue={setSearchValue} />}
-        
+        {/* Example Rendering */}
+        {banners.length > 0 && <BannerSlider banners={banners} />}
 
         {/* Footer */}
-        <hr className="w-100 mt-5" />
+        <hr className="w-100" />
         <div className="container">
           <footer className="py-5">
             <div className="row">
-              {[1, 2, 3].map((_, index) => (
-                <div className="col-6 col-md-2 mb-3" key={index}>
+              <div className="col-6 col-md-2 mb-3">
                   <h5>Section</h5>
                   <ul className="nav flex-column">
                     <li className="nav-item mb-2">
-                      <a href="#" className="nav-link p-0 text-body-secondary">Home</a>
+                      <a href="/" className="nav-link p-0 text-body-secondary">Home</a>
                     </li>
                     <li className="nav-item mb-2">
-                      <a href="#" className="nav-link p-0 text-body-secondary">Features</a>
+                      <a href="/reg_banner" className="nav-link p-0 text-body-secondary">Register banner</a>
                     </li>
                     <li className="nav-item mb-2">
-                      <a href="#" className="nav-link p-0 text-body-secondary">Pricing</a>
+                      <a href="/rules" className="nav-link p-0 text-body-secondary">Site Rules</a>
                     </li>
                     <li className="nav-item mb-2">
-                      <a href="#" className="nav-link p-0 text-body-secondary">FAQs</a>
+                      <a href="/faqs" className="nav-link p-0 text-body-secondary">FAQs</a>
                     </li>
                     <li className="nav-item mb-2">
-                      <a href="#" className="nav-link p-0 text-body-secondary">About</a>
+                      <a href="/about" className="nav-link p-0 text-body-secondary">About</a>
                     </li>
                   </ul>
                 </div>
-              ))}
 
               {/* Collect Emails form */}
               <div className="col-md-5 offset-md-1 mb-3">
@@ -207,7 +170,7 @@ export default function Home() {
 
           </footer>
         </div>
-      </div>
+      </main>
     </>
   );
 }

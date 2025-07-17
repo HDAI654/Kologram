@@ -1,25 +1,25 @@
 "use client";
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import Loading_component from "../../component/Loading";
+import { useParams } from "next/navigation";
+import Loading_component from "@/app/component/Loading";
 import axios from "axios";
-import baseURL from "../../BaseURL";
-import defaultImage from "../../DefaultImage";
-import Sidebar from "../../component/DrawerMenu";
+import baseURL from "@/app/BaseURL";
+import defaultImage from "@/app/DefaultImage";
+import Sidebar from "@/app/component/DrawerMenu";
 import ReactMarkdown from "react-markdown";
 import { toast } from 'react-toastify';
-import getCookie from "../../getCookie";
+import getCookie from "@/app/getCookie";
 import '@/public/entry-styles.css';
-import PrdComment from "../../component/prd-comment";
+import PrdComment from "@/app/component/prd-comment";
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
 
 function Viewprd() {
 
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+  const params = useParams();
+  const id = params?.id;
   const [load, setLoad] = useState(false);
   const [info, setInfo] = useState(false);
   const [starred, setStarred] = useState("DISABLED");

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'auth_app',
     'prd_api',
+    'advertisement',
     
 ]
 
