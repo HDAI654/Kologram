@@ -16,4 +16,5 @@ urlpatterns = [
     path('getChoiseData/', getChoiseData.as_view()),
     path('getCategories/', getCategories.as_view()),
     path('all-prd-ids/', AllProductIDs.as_view()),
+    path('getPrdByID/', getPrdByID.as_view()),
 ]

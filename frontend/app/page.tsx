@@ -80,7 +80,7 @@ export default async function HomePage() {
       <MainNavbar />
 
       {/* Main Content */}
-      <main style={{ paddingTop: '100px', paddingBottom: '100px'  }}>
+      <main style={{ paddingTop: "calc(var(--navbar-height) + 20px)", paddingBottom: '100px'  }}>
 
         {/* Example Rendering */}
         {banners.length > 0 && <BannerSlider banners={banners} />}

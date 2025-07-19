@@ -48,12 +48,6 @@ function Product({ info }: { info: ProductInfo }) {
             <span className="badge bg-primary me-2" style={{ fontSize: "0.8rem" }}>
               {info.category}
             </span>
-            <span
-              className="badge bg-secondary"
-              style={{ fontSize: "0.8rem", textTransform: "capitalize" }}
-            >
-              {info.condition}
-            </span>
           </div>
 
           <div className="d-flex justify-content-between align-items-center mt-3">

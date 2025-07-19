@@ -62,10 +62,11 @@ function MainNavbar() {
         <>
 
             {/* Top Navbar */}
-            <nav className="navbar border-0 bg-contrast bg-body fixed-top" style={{ height: "80px"}}>
+            <nav className="navbar border-0 bg-contrast bg-body fixed-top" style={{ height: "var(--navbar-height)"}}>
                 <div className="container-fluid d-flex align-items-center w-100">
+                    <img src="/NavIcon.svg" className="mx-auto" alt="Brand" style={{ objectFit: "cover", maxWidth: "150px", maxHeight: "80px" }} width="100%" height="100%" />
                     {screenMode !== "sm" && screenMode !== "lt" ? (
-                        <img src="/NavIcon.svg" alt="Brand" style={{ objectFit: "cover", maxWidth: "150px", maxHeight: "80px" }} width="100%" height="100%" />
+                        <br />
                     ): null}
 
                     {/* Search Bar */}

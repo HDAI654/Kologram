@@ -11,14 +11,14 @@ import "@/public/MainNav.css"
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const { id } = params;
   try {
-    const res = await fetch(`${baseURL}/prd-api/get_products?id=${id}`, {
+    const res = await fetch(`${baseURL}/prd-api/getPrdByID?id=${id}`, {
       next: { revalidate: 1200 },
     });
 
     if (!res.ok) throw new Error("Failed to fetch");
 
     const data = await res.json();
-    const product = data.products?.[0];
+    const product = data.product;
 
     if (!product) {
       return {
@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 async function getProductData(id: string) {
-  const res = await fetch(`${baseURL}/prd-api/get_products?id=${id}`, {
+  const res = await fetch(`${baseURL}/prd-api/getPrdByID?id=${id}`, {
     next: { revalidate: 1200 } // ISR every 20 minutes (1200 seconds)
   });
   
@@ -90,19 +90,20 @@ async function Viewprd({ params }: { params: { id: string } }) {
   const { id } = params;
   
   const productData = await getProductData(id);
+  console.log(productData);
   
-  if (!productData || !productData.products || productData.products.length === 0) {
+  if (!productData ) {
     return <p style={{ color: "red" }}>Invalid product !!!</p>;
   }
   
-  const info = productData.products[0];
+  const info = productData.product;
   info.image = info.image ? `${baseURL}${info.image}` : defaultImage;
 
   return (
     <>
       <MainNavbar />
 
-      <main className="container-fluid" style={{ paddingTop: "100px", paddingBottom: "100px" }}>
+      <main className="container-fluid" style={{ paddingTop: "calc(var(--navbar-height) + 20px)", paddingBottom: "100px" }}>
         <div className="row rounded-top-5 rounded-bottom-5 bg-contrast">
           <div className="col-lg-6 col-md-12 col-sm-12 p-3">
             <img

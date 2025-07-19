@@ -58,7 +58,7 @@ export default function SearchPage() {
     <>
       <MainNavbar />
 
-      <main style={{ padding: '2rem', paddingTop: '100px', paddingBottom: '100px' }}>
+      <main style={{ padding: '2rem', paddingTop: "calc(var(--navbar-height) + 20px)", paddingBottom: '100px' }}>
         <h1 className="display-6 text-center mb-4">
           Results for "<strong>{text}</strong>" in <strong>{category}</strong>
         </h1>

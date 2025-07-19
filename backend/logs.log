@@ -13,3 +13,9 @@
 2025-07-15 17:30:44,262 - ERROR - error in GetPrdComment: Field 'id' expected a number but got 'undefined'.
 2025-07-15 17:30:44,282 - ERROR - error in get_products: invalid literal for int() with base 10: 'undefined'
 2025-07-17 11:04:25,787 - ERROR - error in search_products: Negative indexing is not supported.
+2025-07-19 16:56:55,178 - ERROR - error in search_products: Cannot resolve keyword 'discription' into field. Choices are: category, condition, created_at, currency_type, description, digital_file, download_count, file_format, file_size, id, image, is_free, license_type, name, price, productcomment, productincart, productstars, stars, tags, updated_at, user, user_id
+2025-07-19 16:57:41,733 - ERROR - error in search_products: Cannot resolve keyword 'discription' into field. Choices are: category, condition, created_at, currency_type, description, digital_file, download_count, file_format, file_size, id, image, is_free, license_type, name, price, productcomment, productincart, productstars, stars, tags, updated_at, user, user_id
+2025-07-19 16:58:41,188 - ERROR - error in search_products: Cannot resolve keyword 'discription' into field. Choices are: category, condition, created_at, currency_type, description, digital_file, download_count, file_format, file_size, id, image, is_free, license_type, name, price, productcomment, productincart, productstars, stars, tags, updated_at, user, user_id
+2025-07-19 17:16:35,130 - ERROR - error in get_products: 'Product' object has no attribute 'discription'
+2025-07-19 17:16:35,587 - ERROR - error in get_products: 'Product' object has no attribute 'discription'
+2025-07-19 17:18:50,796 - ERROR - error in get_products: 'Product' object has no attribute 'discription'

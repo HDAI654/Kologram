@@ -1,5 +1,5 @@
 from logger import logger
-from .models import products, ProductStars, ProductInCart, ProductComment
+from .models import Product, ProductStars, ProductInCart, ProductComment
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
@@ -21,7 +21,7 @@ class get_products(APIView):
                 search_sts = request.query_params.get('search', "0")
 
                 if search_sts == "0" or search_sts == None:
-                    product_qs = products.objects.all()[page*6:(page+1)*6] 
+                    product_qs = Product.objects.all()[page*6:(page+1)*6] 
                 else:
                     search_sts = str(search_sts)
                     if search_sts != "1":
@@ -30,21 +30,21 @@ class get_products(APIView):
                     if search_text == None:
                         return Response({"products": False, "error": "search_text parameter is required to search"}, status=400)
                     search_text = str(search_text)
-                    product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text))[page*6:(page+1)*6]
+                    product_qs = Product.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text))[page*6:(page+1)*6]
             
             elif category != None :
                 category = str(category)
-                product_qs = products.objects.filter(category=category)
+                product_qs = Product.objects.filter(category=category)
 
             elif product_id != None :
                 product_id = int(product_id)
-                product_qs = products.objects.filter(id=product_id)
+                product_qs = Product.objects.filter(id=product_id)
             
             elif by_user != None :
-                product_qs = products.objects.filter(user=request.user)
+                product_qs = Product.objects.filter(user=request.user)
 
             else :
-                product_qs = products.objects.all()
+                product_qs = Product.objects.all()
 
             # get number of registered users
             try:
@@ -104,7 +104,7 @@ class search_products(APIView):
                 if category not in [c[0] for c in CATEGORIES_CHOICES]:
                     return Response({"products": False, "error": "category parameter is invalid"}, status=400)
 
-                product_qs = products.objects.filter(category=category)
+                product_qs = Product.objects.filter(category=category)
             
             # search in a product name or discription
             elif search_text != None and category == None:
@@ -113,7 +113,7 @@ class search_products(APIView):
                 except:
                     return Response({"products": False, "error": "search_text parameter is invalid"}, status=400)
                 
-                product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text))
+                product_qs = Product.objects.filter(Q(name__icontains=search_text) | Q(description__icontains=search_text))
             
             
             # search with both of category and search_text
@@ -127,7 +127,7 @@ class search_products(APIView):
                 if category not in [c[0] for c in CATEGORIES_CHOICES]:
                     return Response({"products": False, "error": "category parameter is invalid"}, status=400)
 
-                product_qs = products.objects.filter(Q(name__icontains=search_text) | Q(discription__icontains=search_text), category=category)
+                product_qs = Product.objects.filter(Q(name__icontains=search_text) | Q(description__icontains=search_text), category=category)
             
             # get number of registered users
             try:
@@ -152,12 +152,11 @@ class search_products(APIView):
                 {
                     "id": p.id,
                     "name": p.name,
-                    "description": p.discription,
+                    "description": p.description,
                     "price": p.price,
                     "currency_type": p.currency_type,
                     "image": p.image.url if p.image else None,
                     "stars": p.stars // users_count if p.stars else 0,
-                    "condition": p.condition,
                     "category": p.category,
                 }
                 for p in product_qs
@@ -169,6 +168,35 @@ class search_products(APIView):
             logger.error(f"error in search_products: {e}")
             return Response({"products": False, "error":"error in searching"}, status=500)
 
+class getPrdByID(APIView):
+    def get(self, request):
+        try:
+            prd_id = request.query_params.get('id')
+            if not prd_id:
+                return Response({"product": False, "error": "prd_ID parameter is required"}, status=400)
+
+            try:
+                prd_id = int(prd_id)
+            except:
+                return Response({"product": False, "error": "Invalid product ID !"}, status=400)
+            product = Product.objects.filter(id=prd_id).first()
+            if not product:
+                return Response({"product": False, "error": "Product not found"}, status=404)
+            data = {
+                "id": product.id,
+                "name": product.name,
+                "description": product.description,
+                "price": product.price,
+                "currency_type": product.currency_type,
+                "image": product.image.url if product.image else None,
+                "stars": product.stars // User.objects.count() if product.stars else 0,
+                "category": product.category,
+            }
+            return Response({"product": data}, status=200)
+        except Exception as e:
+            logger.error(f"error in getPrdByID: {e}")
+            return Response({"product": False, "error":"error in getting product"}, status=500)
+        
 class HasUserStarredProduct(APIView):
     def get(self, request):
         try:
@@ -183,7 +211,7 @@ class HasUserStarredProduct(APIView):
                 except:
                     return Response({"has_starred": "ERROR", "error": "Invalid product ID !"}, status=400)
 
-                if not products.objects.filter(id=prd_id).exists():
+                if not Product.objects.filter(id=prd_id).exists():
                     return Response({"has_starred": "ERROR", "error": "Invalid product !"}, status=404)
 
                 has_starred = ProductStars.objects.filter(product_id=prd_id, user=user).exists()
@@ -215,8 +243,8 @@ class ChangeStar(APIView):
                     return Response({"status": "ERROR", "msg": "Invalid Product ID."}, status=400)
 
                 try:
-                    product = products.objects.get(id=prd_id)
-                except products.DoesNotExist:
+                    product = Product.objects.get(id=prd_id)
+                except Product.DoesNotExist:
                     return Response({"status": "ERROR", "msg": "Product not found."}, status=404)
 
 
@@ -258,7 +286,7 @@ class isProductInCart(APIView):
                 except:
                     return Response({"status": "ERROR", "error": "Invalid product ID !"}, status=400)
 
-                if not products.objects.filter(id=prd_id).exists():
+                if not Product.objects.filter(id=prd_id).exists():
                     return Response({"status": "ERROR", "error": "Invalid product !"}, status=404)
 
                 status = ProductInCart.objects.filter(product_id=prd_id, user=user).exists()
@@ -290,8 +318,8 @@ class ChangeInCart(APIView):
                     return Response({"status": "ERROR", "msg": "Invalid Product ID. Your prd_ID has incorrect type !"}, status=400)
 
                 try:
-                    product = products.objects.get(id=prd_id)
-                except products.DoesNotExist:
+                    product = Product.objects.get(id=prd_id)
+                except Product.DoesNotExist:
                     return Response({"status": "ERROR", "msg": "Product not found."}, status=404)
 
 
@@ -330,7 +358,7 @@ class AddPrd(APIView):
                     condition = form.cleaned_data["condition"]
                     category = form.cleaned_data["category"]
 
-                    prd = products.objects.create(user=user, name=name, discription=discription, price=price, currency_type=currency_type, image=image, condition=condition, category=category)
+                    prd = Product.objects.create(user=user, name=name, discription=discription, price=price, currency_type=currency_type, image=image, condition=condition, category=category)
                     prd.save()
                     return Response({"result":True}, status=200)
                 
@@ -348,7 +376,7 @@ class DelPrd(APIView):
             if id is None:
                 return Response({"result": False, "error": "Invalid product ID!"}, status=400)
 
-            prd = products.objects.filter(id=id).first()
+            prd = Product.objects.filter(id=id).first()
             if not prd:
                 return Response({"result": False, "error": "Product not found!"}, status=404)
 
@@ -381,7 +409,7 @@ class EditProductView(APIView):
                 condition = form.cleaned_data["condition"]
                 category = form.cleaned_data["category"]
 
-                prd = products.objects.filter(id=id, user=user).first()
+                prd = Product.objects.filter(id=id, user=user).first()
                 if not prd:
                     return Response({"result": False, "error": "Product not found or permission denied."}, status=404)
 
@@ -416,7 +444,7 @@ class GetPrdComment(APIView):
             if id == None:
                 return Response({"result": False, "error": "Invalid product ID!"}, status=400)
             
-            prd = products.objects.filter(id=id).first()
+            prd = Product.objects.filter(id=id).first()
             if not prd:
                 return Response({"result": False, "error": "Product not found!"}, status=404)
             
@@ -441,7 +469,7 @@ class AddProductComment(APIView):
             if not text or not id:
                 return Response({"result": False, "error": "Invalid data!"}, status=400)
             
-            prd = products.objects.filter(id=id).first()
+            prd = Product.objects.filter(id=id).first()
             if not prd:
                 return Response({"result": False, "error": "Product not found!"}, status=404)
             
@@ -487,7 +515,7 @@ class getCategories(APIView):
 
 class AllProductIDs(APIView):
     def get(self, request):
-        product_qs = products.objects.all()
+        product_qs = Product.objects.all()
         data = [
             {
                 "id": p.id,
