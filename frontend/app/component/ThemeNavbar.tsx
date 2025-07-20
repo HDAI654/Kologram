@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from 'react-toastify';
 import '@/public/entry-styles.css';
 
-function ThemeToggleButton({ screenMode }: { screenMode: string }) {
+function ThemeToggleButton() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   const handleThemeChange = () => {
@@ -36,7 +36,7 @@ function ThemeToggleButton({ screenMode }: { screenMode: string }) {
         alignItems: "center",
         justifyContent: "center",
         boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-        marginBottom: screenMode !== "lg" ? "90px" : "0",
+        marginBottom: "90px",
       }}
       title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
     >

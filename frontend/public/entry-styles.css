@@ -44,7 +44,7 @@
 
 @keyframes SlideLeft {
   0% {
-    transform: translateX(60px);
+    transform: translateX(20px);
   }
   100% {
     transform: translateX(0);

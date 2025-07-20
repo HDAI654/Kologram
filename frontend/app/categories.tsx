@@ -1,4 +1,4 @@
-const CATEGORIES = [
+let CATEGORIES = [
     ["software", "Software"],
     ["mobile_apps", "Mobile Apps"],
     ["games", "Games"],

@@ -10,7 +10,8 @@ class getBanners(APIView):
         try:
             banners = Banners.objects.all()
             banners_list = [{
-                "image": banner.image.url
+                "image": banner.image.url,
+                "link": banner.link
             } for banner in banners]
             print(banners_list)
             if banners_list == []:

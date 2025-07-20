@@ -1,27 +1,22 @@
 :root {
-  --navbar-height: 80px;
+  --navbar-height: 60px;
 }
-
-@media (max-width: 940px) {
-  :root {
-    --navbar-height: 80px;
-  }
-}
-
-@media (max-width: 600px) {
-  :root {
-    --navbar-height: 200px;
-  }
-}
-
 
 
 [data-bs-theme="light"] .border-contrast {
-  border-color: #000 !important; /* dark border */
+  border-color: #212529 !important; /* dark border */
 }
 
 [data-bs-theme="dark"] .border-contrast {
-  border-color: #fff !important; /* light border */
+  border-color: #f8f9fa !important; /* light border */
+}
+
+[data-bs-theme="light"] .border-body {
+  border-color: #f8f9fa !important; /* light border */
+}
+
+[data-bs-theme="dark"] .border-body {
+  border-color: #212529 !important; /* dark border */
 }
 
 [data-bs-theme="light"] .bg-contrast {
