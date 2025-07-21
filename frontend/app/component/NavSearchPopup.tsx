@@ -153,14 +153,13 @@ function NavSearchPopup() {
             </div>
 
             {/* Body */}
-            {/* Body */}
             <div className="offcanvas-body p-3">
                 <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
                     {CATEGORIES.map(([key, label]) => (
                         <div key={key} className="col">
                             <a
                             href={`/category/${key}`}
-                            className="btn text-contrast w-100 text-start rounded-4 p-3 shadow-sm"
+                            className="btn text-contrast w-100 text-start rounded-4 p-3"
                             >
                             {label}
                             </a>

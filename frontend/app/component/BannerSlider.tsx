@@ -23,7 +23,7 @@ export default function BannerSlider({ banners }: { banners: Banner[] }) {
         loop={true}
         spaceBetween={20}
         slidesPerView={1}
-        className="rounded-4 shadow"
+        className="rounded-4"
         style={{ height: "300px" }}
       >
         {banners.map((banner:any, index) => (
@@ -35,6 +35,7 @@ export default function BannerSlider({ banners }: { banners: Banner[] }) {
                   backgroundImage: `url(${baseURL + banner.image})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
                   height: "100%",
                 }}
               >

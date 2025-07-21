@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';;
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import "./global.css";
 import '@/public/entry-styles.css';
+import ProgressBarProvider from "./component/ProgressBarProvider";
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -25,6 +26,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 pauseOnHover
                 theme="dark"
               />
+
+        <ProgressBarProvider />
 
         {children}
 

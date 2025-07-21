@@ -1,13 +1,44 @@
+"use client";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import baseURL from "../BaseURL";
 import CATEGORIES from "../categories";
 import Link from "next/link";
+import { toast } from "react-toastify";
+import getCookie from "@/app/getCookie";
 
 axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
 
 export default function Sidebar({username="Guest"}:{username:string}) {
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch(`${baseURL}/auth/logout/`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.logout === true) {
+          toast.success("Logged out successfully");
+          window.location.href = "/auth";
+        } else {
+          toast.error("Logout failed");
+        }
+      } else {
+        toast.error("Logout failed");
+      }
+    } catch (error) {
+      toast.error("An error occurred during logout");
+    }
+  };
 
   return (
     <div className="offcanvas offcanvas-end rounded-end-3" id="sidebarMenu">
@@ -63,6 +94,15 @@ export default function Sidebar({username="Guest"}:{username:string}) {
           <li className="mt-3"><a href="/" className="nav-link"><i className="fas fa-home me-2" />Home</a></li>
           <li className="mt-3"><a href="/panel" className="nav-link"><i className="fas fa-user me-2" />Panel</a></li>
           <li className="mt-3"><a href="/cart" className="nav-link"><i className="fas fa-shopping-cart me-2" />My Cart</a></li>
+        </ul>
+
+        <ul className="list-unstyled w-100 border-top p-3">
+          <li className="mt-3">
+            <a className="nav-link" onClick={handleLogout}>
+              <i className="fas fa-sign-out-alt me-2" />
+              Logout
+            </a>
+          </li>
         </ul>
 
       </div>

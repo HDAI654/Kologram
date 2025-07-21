@@ -58,7 +58,7 @@ class set_logout(APIView):
             if request.user.is_authenticated:
                 logout(request)
                 return Response({"logout":True})
-            return Response({"logout":"NO_LOGIN", "msg": "You are not logged in, so you cannot log out."}, status=401)
+            return Response({"logout":False, "msg": "You are not logged in, so you cannot log out."}, status=401)
         except Exception as e:
             logger.error(f"error in set_logout: {e}")
             return Response({"logout":False}, status=500)

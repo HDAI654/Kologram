@@ -42,3 +42,20 @@
 [data-bs-theme="dark"] .text-contrast {
   color: #f8f9fa !important;
 }
+
+/* nprogress base style */
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: #0051ff !important;
+  height: 3px !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  box-shadow: 0 0 10px #ff0000 !important;
+  border-radius: 0 0 8px 8px;
+}
