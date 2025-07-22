@@ -2,6 +2,7 @@ import baseURL from "./BaseURL";
 import MainNavbar from "./component/MainNav";
 import BannerSlider from "./component/BannerSlider";
 import type { Metadata } from "next";
+import TopPrds from "./component/TopPrds";
 
 
 // Metadata
@@ -50,7 +51,7 @@ async function getBanners() {
   try {
     const res = await fetch(baseURL + "/ad/get-banners", {
       next: {
-        revalidate: 43200, // ISR every 12 hours
+        revalidate: 10, // ISR every 12 hours
       },
     });
 
@@ -82,8 +83,12 @@ export default async function HomePage() {
       {/* Main Content */}
       <main style={{ paddingTop: "calc(var(--navbar-height) + 20px)", paddingBottom: '100px'  }}>
 
+
         {/* Example Rendering */}
         {banners.length > 0 && <BannerSlider banners={banners} />}
+
+        {/* Top Products */}
+        <TopPrds />
 
         {/* Footer */}
         <hr className="w-100" />

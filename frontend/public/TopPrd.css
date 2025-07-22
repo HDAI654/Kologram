@@ -1,0 +1,51 @@
+.top-prds-scroll {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 0;
+    margin-bottom: 4px;
+
+    /* Hide scrollbar */
+    scrollbar-width: none; /* for Firefox */
+    -ms-overflow-style: none;  /* for IE and Edge */
+}
+
+.top-prds-scroll::-webkit-scrollbar {
+    display: none; /* for Chrome, Safari, Opera */
+}
+
+.prd-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+}
+
+.prd-name {
+    font-size: 1rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    margin-top: 0.5rem;
+}
+
+.scroll-btn{
+    height: 36px;
+    width: 36px;
+    opacity: .7;
+    border-radius: 50%;
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    font-size: 0;
+}
+
+.scroll-btn:hover{
+    opacity: 1;
+}

@@ -524,6 +524,20 @@ class AllProductIDs(APIView):
 
         return Response({"products": data})
 
-
+class GetTopPrds(APIView):
+    def get(self, request):
+        try:
+            top_prds = Product.objects.all().order_by('-stars')[:10]
+            data = [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "image": p.image.url if p.image else None,
+                }
+                for p in top_prds]
+            return Response({"result": data, "products": data}, status=200)
+        except Exception as e:
+            logger.error(f"error in GetTopPrds: {e}")
+            return Response({"result": False, "error": "Server error."}, status=500)
 
 

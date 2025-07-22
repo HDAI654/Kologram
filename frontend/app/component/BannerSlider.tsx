@@ -7,6 +7,7 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import baseURL from "../BaseURL";
 import Link from "next/link";
+import "@/public/Slider.css";
 
 interface Banner {
   image: string;
@@ -14,7 +15,7 @@ interface Banner {
 
 export default function BannerSlider({ banners }: { banners: Banner[] }) {
   return (
-    <div className="container position-relative">
+    <div className="container-fluid position-relative m-0">
       <Swiper
         modules={[Autoplay, Pagination, Navigation]}
         autoplay={{ delay: 3000 }}
@@ -23,14 +24,13 @@ export default function BannerSlider({ banners }: { banners: Banner[] }) {
         loop={true}
         spaceBetween={20}
         slidesPerView={1}
-        className="rounded-4"
-        style={{ height: "300px" }}
+        style={{ height: "500px", borderRadius: "0%" }}
       >
         {banners.map((banner:any, index) => (
           <SwiperSlide key={index}>
             <Link href={banner.link || "#"} className="text-decoration-none">
               <div
-                className="position-relative d-flex align-items-center justify-content-center text-white overflow-hidden rounded-4"
+                className="position-relative d-flex align-items-center justify-content-center text-white overflow-hidden"
                 style={{
                   backgroundImage: `url(${baseURL + banner.image})`,
                   backgroundSize: "cover",

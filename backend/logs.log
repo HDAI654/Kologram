@@ -25,3 +25,5 @@
 2025-07-21 13:19:07,175 - ERROR - error in get_products: 'Product' object has no attribute 'discription'
 2025-07-21 13:19:11,579 - ERROR - error in get_products: 'Product' object has no attribute 'discription'
 2025-07-21 13:19:11,605 - ERROR - error in get_products: 'Product' object has no attribute 'discription'
+2025-07-22 13:49:37,628 - ERROR - error in GetTopPrds: The 'image' attribute has no file associated with it.
+2025-07-22 13:52:22,474 - ERROR - error in GetTopPrds: The 'image' attribute has no file associated with it.
