@@ -51,7 +51,7 @@ async function getBanners() {
   try {
     const res = await fetch(baseURL + "/ad/get-banners", {
       next: {
-        revalidate: 10, // ISR every 12 hours
+        revalidate: 43200, // ISR every 12 hours
       },
     });
 
