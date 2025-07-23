@@ -43,3 +43,48 @@ let CATEGORIES = [
 ]
 
 export default CATEGORIES;
+
+let CATEGORY_IMAGES = [
+    ['software', '/media/files/categories/software.png'], 
+    ['mobile_apps', '/media/files/categories/mobile_apps.png'], 
+    ['games', '/media/files/categories/games.png'], 
+    ['ebooks', '/media/files/categories/ebooks.png'], 
+    ['audiobooks', '/media/files/categories/audiobooks.png'], 
+    ['articles', '/media/files/categories/articles.png'], 
+    ['music', '/media/files/categories/music.png'], 
+    ['sound_effects', '/media/files/categories/sound_effects.png'], 
+    ['videos', '/media/files/categories/videos.png'], 
+    ['courses', '/media/files/categories/courses.png'], 
+    ['web_templates', '/media/files/categories/web_templates.png'], 
+    ['wordpress_themes', '/media/files/categories/wordpress_themes.png'], 
+    ['plugins', '/media/files/categories/plugins.png'], 
+    ['graphic_designs', '/media/files/categories/graphic_designs.png'], 
+    ['illustrations', '/media/files/categories/illustrations.png'], 
+    ['fonts', '/media/files/categories/fonts.png'], 
+    ['3d_models', '/media/files/categories/3d_models.png'], 
+    ['photos', '/media/files/categories/photos.png'], 
+    ['code_snippets', '/media/files/categories/code_snippets.png'], 
+    ['scripts', '/media/files/categories/scripts.png'], 
+    ['presentation_templates', '/media/files/categories/presentation_templates.png'], 
+    ['resumes', '/media/files/categories/resumes.png'], 
+    ['ui_kits', '/media/files/categories/ui_kits.png'], 
+    ['mockups', '/media/files/categories/mockups.png'], 
+    ['branding_kits', '/media/files/categories/branding_kits.png'], 
+    ['marketing_materials', '/media/files/categories/marketing_materials.png'], 
+    ['email_templates', '/media/files/categories/email_templates.png'], 
+    ['datasets', '/media/files/categories/datasets.png'], 
+    ['notion_templates', '/media/files/categories/notion_templates.png'], 
+    ['figma_templates', '/media/files/categories/figma_templates.png'], 
+    ['canva_templates', '/media/files/categories/canva_templates.png'], 
+    ['subscription_services', '/media/files/categories/subscription_services.png'], 
+    ['licenses', '/media/files/categories/licenses.png'], 
+    ['tools', '/media/files/categories/tools.png'], 
+    ['cloud_files', '/media/files/categories/cloud_files.png'], 
+    ['ai_assets', '/media/files/categories/ai_assets.png'], 
+    ['nft_digital_art', '/media/files/categories/nft_digital_art.png'], 
+    ['wallpapers', '/media/files/categories/wallpapers.png'], 
+    ['printables', '/media/files/categories/printables.png'], 
+    ['custom_requests', '/media/files/categories/custom_requests.png'], 
+    ['other', '/media/files/categories/other.png']
+]
+export { CATEGORY_IMAGES };

@@ -8,9 +8,9 @@ function NavSearchPopup() {
     const [searchText, setSearchText] = useState("");
     const [screenMode, setscreenMode] = useState("lg");
     useEffect(() => {
-            handleResize();
-            window.addEventListener("resize", handleResize)
-        }, []);
+        handleResize();
+        window.addEventListener("resize", handleResize)
+    }, []);
 
     const handleResize = () => {
         let width = window.innerWidth

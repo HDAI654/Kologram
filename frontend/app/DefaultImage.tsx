@@ -1,3 +1,3 @@
-let defaultImage = "http://localhost:8000/media/files/images/UNKNOWN.png";
+let defaultImage = "/UNKNOWN.png";
 
 export default defaultImage

@@ -59,3 +59,12 @@
   box-shadow: 0 0 10px #ff0000 !important;
   border-radius: 0 0 8px 8px;
 }
+
+/* Hover Styles */
+.ctm-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ctm-hover:hover {
+  transform: translateY(-5px) scale(1.03);
+}

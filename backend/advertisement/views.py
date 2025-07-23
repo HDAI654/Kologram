@@ -1,9 +1,11 @@
 from logger import logger
-from .models import Banners
+from .models import Banners, Offer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
 from django.contrib.auth.models import User
+from django.utils.timezone import now
+from django.http import JsonResponse
 
 class getBanners(APIView):
     def get(self, request):
@@ -22,3 +24,11 @@ class getBanners(APIView):
         except Exception as e:
             logger.error(f"error in getBanners: {e}")
             return Response({"banners": False, "error":"error in getting banners"}, status=500)
+
+
+class getOffers(APIView):
+    def get(self, request):
+        offers = Offer.objects.filter(end_time__gt=now()).order_by('end_time').values(
+            'title', 'description', 'link', 'end_time'
+        )
+        return JsonResponse(list(offers), safe=False)

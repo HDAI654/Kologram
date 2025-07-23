@@ -1,4 +1,4 @@
-.top-prds-scroll {
+.ctg-scroll {
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -11,26 +11,27 @@
     -ms-overflow-style: none;  /* for IE and Edge */
 }
 
-.top-prds-scroll::-webkit-scrollbar {
+.ctg-scroll::-webkit-scrollbar {
     display: none; /* for Chrome, Safari, Opera */
 }
 
-.prd-image {
-    width: 100px;
-    height: 100px;
+.ctg-image {
+    width: 300px;
+    height: 300px;
     object-fit: cover;
     border-radius: 50%;
     border: 2px solid #ccc;
+    display: block;
 }
 
-.prd-name {
-    font-size: 1rem;
+.ctg-name {
+    font-size: 1.5rem;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
-    margin-top: 0.5rem;
+    margin-top: 1rem;
 }
 
 .scroll-btn{
@@ -48,4 +49,14 @@
 
 .scroll-btn:hover{
     opacity: 1;
+}
+
+
+/* Hover Styles */
+.ctg-hover {
+  transition: transform 0.3s ease;
+}
+
+.ctg-hover:hover {
+  transform: translateY(5px) scale(1.03);
 }
