@@ -2,6 +2,9 @@
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scroll-behavior: smooth;
     gap: 1rem;
     padding-bottom: 0;
     margin-bottom: 4px;

@@ -14,19 +14,20 @@ function TopPrds() {
     const [loading, setLoading] = useState<boolean>(true);
     const skeletonCount = 10;
     const [cardWidth, setCardWidth] = useState<number>(150);
-    const scrollRef = useRef(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
     const [screenMode, setscreenMode] = useState("lt");
 
 
     useEffect(() => {
         handleResize();
-        window.addEventListener("resize", handleResize)
+        window.addEventListener("resize", handleResize);
         
         // calculate width of each top product
         const updateWidth = () => {
             setCardWidth(window.innerWidth / 10);
         };
         updateWidth();
+        window.addEventListener("resize", updateWidth);
         
         // get top products
         const getTopPrds = async () => {
@@ -47,6 +48,30 @@ function TopPrds() {
             }
         };
         getTopPrds();
+        
+        // Setup wheel scrolling
+        const scrollContainer = scrollRef.current;
+        if (scrollContainer) {
+            const handleWheel = (e: WheelEvent) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    scrollContainer.scrollLeft += e.deltaY * 0.5;
+                }
+            };
+            
+            scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+            
+            return () => {
+                window.removeEventListener("resize", handleResize);
+                window.removeEventListener("resize", updateWidth);
+                scrollContainer.removeEventListener('wheel', handleWheel);
+            };
+        }
+        
+        return () => {
+            window.removeEventListener("resize", handleResize);
+            window.removeEventListener("resize", updateWidth);
+        };
     }, []);
     
     const handleResize = () => {
@@ -68,13 +93,13 @@ function TopPrds() {
 
     const scrollLeft = () => {
         if (scrollRef.current) {
-        scrollRef.current.scrollBy({ left: -cardWidth * 2, behavior: "smooth" });
+            scrollRef.current.scrollBy({ left: -cardWidth * 1.5, behavior: "smooth" });
         }
     };
 
     const scrollRight = () => {
         if (scrollRef.current) {
-        scrollRef.current.scrollBy({ left: cardWidth * 2, behavior: "smooth" });
+            scrollRef.current.scrollBy({ left: cardWidth * 1.5, behavior: "smooth" });
         }
     };
 
@@ -86,9 +111,9 @@ function TopPrds() {
 
     return (
         <>
-            <div className="mt-5 w-100 border-top py-3 mb-4">
+            <div className="mt-5 w-100 border-top py-3 mb-4 md:px-0 px-4">
                 <div className="d-flex">
-                    <h3 className="text-left mx-5 mb-4">
+                    <h3 className={`mb-4 ctm-hover mx-5 ${(screenMode === "lt" || screenMode === "sm") ? "text-center w-100" : "text-start"}`}>
                         Top Products
                     </h3>
                     {(screenMode==="lg" || screenMode==="md") && (
