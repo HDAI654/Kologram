@@ -12,12 +12,28 @@ axios.defaults.withCredentials = true;
 
 function CategorySlider() {
     const cardWidth = 320;
-    const scrollRef = useRef(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
     const [screenMode, setscreenMode] = useState("lt");
 
     useEffect(() => {
         handleResize();
         window.addEventListener("resize", handleResize);
+        
+        const scrollContainer = scrollRef.current;
+        if (scrollContainer) {
+            const handleWheel = (e: WheelEvent) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    scrollContainer.scrollLeft += e.deltaY;
+                }
+            };
+            
+            scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+            
+            return () => {
+                scrollContainer.removeEventListener('wheel', handleWheel);
+            };
+        }
     }, []);
     
     const handleResize = () => {
@@ -51,9 +67,9 @@ function CategorySlider() {
 
     return (
         <>
-            <div className="mt-5 w-100 border-top mb-4">
+            <div className="mt-5 w-100 border-top mb-4 md:px-0 px-4">
                 <div className="d-flex mt-3">
-                    <h3 className="text-left mx-5 mb-4 ctm-hover">
+                    <h3 className={`mb-4 ctm-hover mx-5 ${(screenMode === "lt" || screenMode === "sm") ? "text-center w-100" : "text-start"}`}>
                         Categories
                     </h3>
                     {(screenMode==="lg" || screenMode==="md") && (

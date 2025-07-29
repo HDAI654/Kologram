@@ -1,0 +1,164 @@
+.offers-scroll {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scroll-behavior: smooth;
+    gap: 1rem;
+    padding-bottom: 0;
+    margin-bottom: 4px;
+
+    /* Hide scrollbar */
+    scrollbar-width: none; /* for Firefox */
+    -ms-overflow-style: none;  /* for IE and Edge */
+}
+
+.offers-scroll::-webkit-scrollbar {
+    display: none; /* for Chrome, Safari, Opera */
+}
+
+.offer-card {
+    display: inline-block;
+    white-space: normal;
+}
+
+.offer-card .card {
+    height: 280px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.offer-card .card:hover {
+    transform: translateY(-2px);
+}
+
+.offer-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.75rem;
+}
+
+.offer-card .card-text {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.offer-card .btn {
+    font-size: 0.85rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.offer-card .alert {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+}
+
+/* Countdown responsive styles */
+.offer-card .alert .d-flex {
+    flex-wrap: wrap;
+    justify-content: center !important;
+    gap: 0.25rem;
+}
+
+.offer-card .alert .bg-light {
+    min-width: 45px !important;
+    padding: 0.25rem !important;
+}
+
+.offer-card .alert .fs-4 {
+    font-size: 0.9rem !important;
+}
+
+.offer-card .alert .small {
+    font-size: 0.65rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .offers-scroll {
+        gap: 0.75rem;
+    }
+    
+    .offer-card {
+        min-width: 250px !important;
+        max-width: 250px !important;
+    }
+    
+    .offer-card .card {
+        height: 260px;
+    }
+    
+    /* Smaller countdown boxes for tablets */
+    .offer-card .alert .bg-light {
+        min-width: 40px !important;
+        padding: 0.2rem !important;
+    }
+    
+    .offer-card .alert .fs-4 {
+        font-size: 0.8rem !important;
+    }
+    
+    .offer-card .alert .small {
+        font-size: 0.6rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .offer-card {
+        min-width: 220px !important;
+        max-width: 220px !important;
+    }
+    
+    .offer-card .card {
+        height: 240px;
+    }
+    
+    .offer-card .card-title {
+        font-size: 1rem;
+    }
+    
+    .offer-card .card-text {
+        font-size: 0.8rem;
+    }
+    
+    /* Very compact countdown for mobile */
+    .offer-card .alert {
+        padding: 0.3rem;
+    }
+    
+    .offer-card .alert .d-flex {
+        gap: 0.15rem;
+    }
+    
+    .offer-card .alert .bg-light {
+        min-width: 35px !important;
+        padding: 0.15rem !important;
+    }
+    
+    .offer-card .alert .fs-4 {
+        font-size: 0.7rem !important;
+    }
+    
+    .offer-card .alert .small {
+        font-size: 0.55rem !important;
+    }
+}
+
+.scroll-btn{
+    height: 36px;
+    width: 36px;
+    opacity: .7;
+    border-radius: 50%;
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    font-size: 0;
+    display: flex;
+}
+
+.scroll-btn:hover{
+    opacity: 1;
+}
