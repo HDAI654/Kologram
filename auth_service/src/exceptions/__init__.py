@@ -1,1 +1,2 @@
 from src.exceptions.domain import *
+from src.exceptions.application import *

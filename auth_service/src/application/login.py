@@ -59,12 +59,8 @@ class LoginHandler:
         session = Session.create(user_id=user.id.value, device=command.device)
         await self._sessions.add(session)
 
-        access = self._tokens.create_access_token(
-            user.id, session.id, session.device
-        )
-        refresh = self._tokens.create_refresh_token(
-            user.id, session.id, session.device
-        )
+        access = self._tokens.create_access_token(user.id, session.id, session.device)
+        refresh = self._tokens.create_refresh_token(user.id, session.id, session.device)
 
         if self._events is not None:
             await self._events.publish(

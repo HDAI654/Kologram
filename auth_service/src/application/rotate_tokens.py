@@ -55,9 +55,7 @@ class RotateTokensHandler:
         # SECURITY: do not mint tokens for revoked sessions.
         await self._sessions.get_by_id(session_id)
 
-        access = self._encoder.create_access_token(
-            user_id, session_id, session_device
-        )
+        access = self._encoder.create_access_token(user_id, session_id, session_device)
 
         need_refresh = False
         try:

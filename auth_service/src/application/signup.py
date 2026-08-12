@@ -82,10 +82,14 @@ class SignupHandler:
         await self._sessions.add(session)
 
         access = self._tokens.create_access_token(
-            user.id, session.id, session.device,
+            user.id,
+            session.id,
+            session.device,
         )
         refresh = self._tokens.create_refresh_token(
-            user.id, session.id, session.device,
+            user.id,
+            session.id,
+            session.device,
         )
 
         if self._events is not None:
