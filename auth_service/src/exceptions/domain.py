@@ -40,3 +40,8 @@ class InvalidDateError(DomainError):
     """Date value is invalid."""
 
     pass
+
+class InvalidUserStatusError(DomainError):
+    """UserStatus value is not recognized."""
+
+    pass
