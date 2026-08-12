@@ -45,3 +45,8 @@ class InvalidUserStatusError(DomainError):
     """UserStatus value is not recognized."""
 
     pass
+
+class InvalidVerificationTokenError(DomainError):
+    """Verification token is not a valid UUID v4."""
+
+    pass
