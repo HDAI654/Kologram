@@ -6,7 +6,7 @@ from redis.exceptions import TimeoutError as RedisTimeoutError
 from src.conf import Config
 from src.domain.ports.verification_token_repository import VerificationTokenRepository
 from src.domain.value_objects.email import Email
-from src.domain.value_objects.email_verification_token import EmailVerificationToken
+from src.domain.value_objects.verification_token import VerificationToken
 from src.exceptions import (
     CacheConnectionError,
     CacheOperationError,
@@ -25,7 +25,7 @@ class RedisVerificationTokenRepository(VerificationTokenRepository):
 
     async def add(
         self,
-        token: EmailVerificationToken,
+        token: VerificationToken,
         email: Email,
         token_type: str,
         ttl_seconds: int,
@@ -41,7 +41,7 @@ class RedisVerificationTokenRepository(VerificationTokenRepository):
 
     async def get(
         self,
-        token: EmailVerificationToken,
+        token: VerificationToken,
         token_type: str,
     ) -> Email | None:
         key = self._key(token, token_type)
@@ -54,13 +54,13 @@ class RedisVerificationTokenRepository(VerificationTokenRepository):
 
     async def delete(
         self,
-        token: EmailVerificationToken,
+        token: VerificationToken,
         token_type: str,
     ) -> None:
         key = self._key(token, token_type)
         await self._execute_redis_operation("delete_token", self._client.delete, key)
 
-    def _key(self, token: EmailVerificationToken, token_type: str) -> str:
+    def _key(self, token: VerificationToken, token_type: str) -> str:
         return f"{self._prefix}{token_type}:{token.value}"
 
     async def _execute_redis_operation(self, operation: str, coro, *args, **kwargs):

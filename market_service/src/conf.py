@@ -14,7 +14,7 @@ if os.getenv("APP_NAME") is None and _env.exists():
 
 
 class Config:
-    APP_NAME: str = os.getenv("APP_NAME", "CapMarket")
+    APP_NAME: str = os.getenv("APP_NAME", "Kologram")
     APP_ENV: str = os.getenv("APP_ENV", "development")
 
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")

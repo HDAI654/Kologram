@@ -13,4 +13,4 @@ class UserModel(Base):
         String(254), unique=True, nullable=False, index=True
     )
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[str] = mapped_column(String(16), nullable=False, default="USER")
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="ACTIVE")

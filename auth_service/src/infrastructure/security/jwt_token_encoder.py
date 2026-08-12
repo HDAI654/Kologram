@@ -10,7 +10,6 @@ import jwt
 from src.conf import Config
 from src.domain.ports.token_encoder import TokenEncoder
 from src.domain.value_objects.device import Device
-from src.domain.value_objects.role import Role
 from src.domain.value_objects.session_id import SessionId
 from src.domain.value_objects.user_id import UserId
 
@@ -43,10 +42,9 @@ class JwtTokenEncoder(TokenEncoder):
         user_id: UserId,
         session_id: SessionId,
         device: Device,
-        role: Role | None = None,
     ) -> str:
         return self._encode(
-            user_id, session_id, device, role or Role.user(), "access", self._access_ttl
+            user_id, session_id, device, "access", self._access_ttl
         )
 
     def create_refresh_token(
@@ -54,13 +52,11 @@ class JwtTokenEncoder(TokenEncoder):
         user_id: UserId,
         session_id: SessionId,
         device: Device,
-        role: Role | None = None,
     ) -> str:
         return self._encode(
             user_id,
             session_id,
             device,
-            role or Role.user(),
             "refresh",
             self._refresh_ttl,
         )
@@ -70,7 +66,6 @@ class JwtTokenEncoder(TokenEncoder):
         user_id: UserId,
         session_id: SessionId,
         device: Device,
-        role: Role,
         token_type: str,
         ttl_minutes: int,
     ) -> str:
@@ -79,7 +74,6 @@ class JwtTokenEncoder(TokenEncoder):
             "sub": user_id.value,
             "sid": session_id.value,
             "dev": device.value,
-            "role": role.value,
             "type": token_type,
             "iat": now,
             "exp": now + timedelta(minutes=ttl_minutes),
