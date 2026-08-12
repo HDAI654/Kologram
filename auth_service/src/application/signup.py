@@ -12,7 +12,6 @@ from src.domain.ports.verification_token_repository import VerificationTokenRepo
 from src.domain.value_objects.verification_token import VerificationToken
 from src.domain.value_objects.password import Password
 from src.exceptions import (
-    InvalidEmailVerificationTokenError,
     InvalidVerificationTokenError,
 )
 
@@ -56,7 +55,7 @@ class SignupHandler:
 
         try:
             token_vo = VerificationToken(command.verify_token)
-        except InvalidEmailVerificationTokenError as exc:
+        except InvalidVerificationTokenError as exc:
             raise InvalidVerificationTokenError(
                 f"Token '{command.verify_token}' not found"
             ) from exc

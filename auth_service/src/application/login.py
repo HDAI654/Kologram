@@ -8,7 +8,12 @@ from src.domain.ports.session_repository import SessionRepository
 from src.domain.ports.token_encoder import TokenEncoder
 from src.domain.ports.unit_of_work import UnitOfWork
 from src.domain.value_objects.email import Email
-from src.exceptions import InvalidEmailOrPasswordError, UserNotFoundError
+from src.domain.value_objects.user_status import UserStatus
+from src.exceptions import (
+    InvalidEmailOrPasswordError,
+    UserNotFoundError,
+    AccountSuspendedError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +56,9 @@ class LoginHandler:
                 user = await self._uow.users.get_by_email(email)
         except UserNotFoundError as exc:
             raise InvalidEmailOrPasswordError() from exc
+
+        if user.status == UserStatus.suspended:
+            raise AccountSuspendedError()
 
         # SECURITY: login only verifies hash — no strength rules on existing passwords.
         if not self._hasher.verify(command.password, user.hashed_password):

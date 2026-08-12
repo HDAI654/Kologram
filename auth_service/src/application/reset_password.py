@@ -5,9 +5,11 @@ from src.domain.ports.unit_of_work import UnitOfWork
 from src.domain.ports.verification_token_repository import VerificationTokenRepository
 from src.domain.value_objects.verification_token import VerificationToken
 from src.domain.value_objects.password import Password
+from src.domain.value_objects.user_status import UserStatus
 from src.exceptions import (
     InvalidVerificationTokenError,
     InvalidVerificationTokenError,
+    AccountSuspendedError,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,6 +55,8 @@ class ResetPasswordHandler:
 
         async with self._uow:
             user = await self._uow.users.get_by_email(email)
+            if user.status == UserStatus.suspended:
+                raise AccountSuspendedError()
             await self._uow.users.update(user.id, new_password=hashed)
             await self._uow.commit()
 

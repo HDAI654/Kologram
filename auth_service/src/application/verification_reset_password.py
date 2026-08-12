@@ -6,7 +6,7 @@ from src.domain.ports.event_publisher import EventPublisher
 from src.domain.ports.unit_of_work import UnitOfWork
 from src.domain.ports.verification_token_repository import VerificationTokenRepository
 from src.domain.value_objects.email import Email
-from src.domain.value_objects.email_verification_token import EmailVerificationToken
+from src.domain.value_objects.verification_token import VerificationToken
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class VerificationResetPassHandler:
             logger.info("Forget-password for unknown email (no-op)")
             return
 
-        token = EmailVerificationToken.generate()
+        token = VerificationToken.generate()
         await self._tokens.add(
             token=token,
             email=email,
