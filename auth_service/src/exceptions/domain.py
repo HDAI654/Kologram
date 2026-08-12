@@ -20,3 +20,8 @@ class InvalidEmailError(DomainError):
     """Email format is invalid."""
 
     pass
+
+class InvalidPasswordError(DomainError):
+    """Password does not meet domain strength rules."""
+
+    pass
