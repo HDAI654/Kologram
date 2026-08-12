@@ -13,8 +13,8 @@ class TestDate:
 
     def test_invalid_string_format(self):
         with pytest.raises(InvalidDateError):
-            Date("2025-13-01")   # invalid month
-            Date("2025-01-32")   # invalid day
+            Date("2025-13-01")  # invalid month
+            Date("2025-01-32")  # invalid day
             Date("not-a-date")
 
     def test_valid_date_object(self):

@@ -35,7 +35,7 @@ class User(Entity):
             id=UserId(id) if id is not None else UserId.generate(),
             email=Email(email),
             hashed_password=HashedPassword(hashed_password),
-            role=UserStatus(status) if status is not None else UserStatus.active(),
+            status=UserStatus(status) if status is not None else UserStatus.active(),
         )
 
     def change_password(self, hashed_password: HashedPassword) -> None:

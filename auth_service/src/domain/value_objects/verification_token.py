@@ -7,4 +7,3 @@ class VerificationToken(ID):
 
     def __init__(self, value: str) -> None:
         super().__init__(value, InvalidVerificationTokenError)
-

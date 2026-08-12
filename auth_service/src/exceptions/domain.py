@@ -16,37 +16,63 @@ class InvalidSessionIdError(DomainError):
 
     pass
 
+
 class InvalidEmailError(DomainError):
     """Email format is invalid."""
 
     pass
+
 
 class InvalidPasswordError(DomainError):
     """Password does not meet domain strength rules."""
 
     pass
 
+
 class InvalidHashedPasswordError(DomainError):
     """Hashed password payload is invalid."""
 
     pass
+
 
 class InvalidDeviceError(DomainError):
     """Device identifier is invalid."""
 
     pass
 
+
 class InvalidDateError(DomainError):
     """Date value is invalid."""
 
     pass
+
 
 class InvalidUserStatusError(DomainError):
     """UserStatus value is not recognized."""
 
     pass
 
+
 class InvalidVerificationTokenError(DomainError):
     """Verification token is not a valid UUID v4."""
+
+    pass
+
+
+# Entities
+class UserNotFoundError(DomainError):
+    """User aggregate was not found."""
+
+    pass
+
+
+class UserAlreadyExistsError(DomainError):
+    """User already exists for the given email."""
+
+    pass
+
+
+class SessionNotFoundError(DomainError):
+    """Session was not found."""
 
     pass

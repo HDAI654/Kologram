@@ -11,7 +11,7 @@ class TestPassword:
 
     def test_too_short(self):
         with pytest.raises(InvalidPasswordError):
-            Password("Ab1")   # length 3
+            Password("Ab1")  # length 3
 
     def test_too_long(self):
         with pytest.raises(InvalidPasswordError):

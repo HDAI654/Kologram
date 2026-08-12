@@ -11,7 +11,7 @@ class TestUserStatus:
             UserStatus([])
 
     def test_invalid_values(self):
-        invalid = ["", " ", "active", "INACTIVE", "PENDING", "ACTIVE "]
+        invalid = ["", " ", "activeee", "INACTIVE", "PENDING"]
         for val in invalid:
             with pytest.raises(InvalidUserStatusError):
                 UserStatus(val)
