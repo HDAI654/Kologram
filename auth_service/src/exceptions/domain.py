@@ -30,3 +30,8 @@ class InvalidHashedPasswordError(DomainError):
     """Hashed password payload is invalid."""
 
     pass
+
+class InvalidDeviceError(DomainError):
+    """Device identifier is invalid."""
+
+    pass
