@@ -1,0 +1,90 @@
+# structure file
+STRUCTURE.md
+TODO.md
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.manifest
+*.spec
+
+# db & logs
+*.log
+*.pot
+*.py[cod]
+*.sqlite3
+*.db
+db.sqlite3
+media/
+logs/
+.env
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Docker
+*.pid
+*.log
+docker-compose.override.yml
+*.swp
+*.swo
+
+# Pytest
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.coverage
+htmlcov/
+.tox/
+.cache/
+.pytest_cache/
+.coverage
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.iml
+
+# System files
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+
+# Misc
+__pycache__/
+*.egg-info/
+pip-log.txt
+
+# keys
+*.pem
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build output
+/bin/
+/build/
+/dist/
