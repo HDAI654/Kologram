@@ -15,3 +15,8 @@ class InvalidSessionIdError(DomainError):
     """Session id is not a valid UUID v4."""
 
     pass
+
+class InvalidEmailError(DomainError):
+    """Email format is invalid."""
+
+    pass
