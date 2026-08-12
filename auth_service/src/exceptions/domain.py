@@ -25,3 +25,8 @@ class InvalidPasswordError(DomainError):
     """Password does not meet domain strength rules."""
 
     pass
+
+class InvalidHashedPasswordError(DomainError):
+    """Hashed password payload is invalid."""
+
+    pass
