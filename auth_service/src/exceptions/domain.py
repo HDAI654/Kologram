@@ -35,3 +35,8 @@ class InvalidDeviceError(DomainError):
     """Device identifier is invalid."""
 
     pass
+
+class InvalidDateError(DomainError):
+    """Date value is invalid."""
+
+    pass
