@@ -23,7 +23,6 @@ flowchart LR
 
  subgraph NotificationLayer["Notification Layer"]
         ND["Notification Dispatcher"]
-        ADP["Authentication Dispatcher"]
   end
 
  subgraph DataStores["Data Stores"]
@@ -57,9 +56,7 @@ flowchart LR
     AD -- Publishes events --> EB
 
     ND -- Consumes events --> EB
-    ADP -- Consumes events --> EB
     ND -- Sends email --> User
-    ADP -- Sends email --> User
 
     MS -- Reads user context --> AS
     CS -- Reads user context --> AS

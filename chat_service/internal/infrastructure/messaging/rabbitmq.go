@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"cap/chat_service/internal/domain/event"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/event"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )

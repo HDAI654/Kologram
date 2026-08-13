@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"cap/chat_service/internal/domain/event"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/event"
 )
 
 // NoOpEventPublisher discards events (default when messaging is disabled).

@@ -6,10 +6,8 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, Response, status
-
-from src.application.admin_login import AdminLoginCommand, AdminLoginHandler
 from src.application.delete_account import DeleteAccountCommand, DeleteAccountHandler
-from src.application.forget_password import ForgetPasswordCommand, ForgetPasswordHandler
+from src.application.verification_reset_password import VerificationResetPassCommand, VerificationResetPassHandler
 from src.application.login import LoginCommand, LoginHandler
 from src.application.logout import LogoutCommand, LogoutHandler
 from src.application.reset_password import ResetPasswordCommand, ResetPasswordHandler
@@ -40,9 +38,9 @@ from src.exceptions import (
     TokenInfrastructureError,
     UserAlreadyExistsError,
     UserNotFoundError,
+    AccountSuspendedError,
 )
 from src.presentation.api.v1.schemas.requests import (
-    AdminLoginRequest,
     DeleteAccountRequest,
     ForgetPasswordRequest,
     LoginRequest,
@@ -101,6 +99,11 @@ async def send_verification(
         await handler.handle(SendVerificationCommand(email=body.email))
     except EmailBlockedError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    except AccountSuspendedError:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail="Your account has been suspended. Please contact support for assistance."
+            )
     except InvalidEmailError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
@@ -183,39 +186,10 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         )
-    return TokenPairResponse(
-        access_token=result.access_token, refresh_token=result.refresh_token
-    )
-
-
-@router.post(
-    "/admin/login",
-    response_model=TokenPairResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Admin login (account + admin secret)",
-)
-async def admin_login(
-    body: AdminLoginRequest,
-    uow_factory: UoWFactory,
-    sessions: SessionRepoDep,
-    encoder: TokenEncoderDep,
-    hasher: PasswordHasherDep,
-    events: EventPublisherDep,
-) -> TokenPairResponse:
-    handler = AdminLoginHandler(uow_factory(), sessions, encoder, hasher, events)
-    try:
-        result = await handler.handle(
-            AdminLoginCommand(
-                email=body.email,
-                password=body.password,
-                admin_password=body.admin_password,
-                device=body.device,
-            )
-        )
-    except InvalidEmailOrPasswordError:
+    except AccountSuspendedError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Your account has been suspended. Please contact support for assistance."
         )
     return TokenPairResponse(
         access_token=result.access_token, refresh_token=result.refresh_token
@@ -288,9 +262,9 @@ async def forget_password(
     token_repo: TokenRepoDep,
     events: EventPublisherDep,
 ) -> Response:
-    handler = ForgetPasswordHandler(uow_factory(), token_repo, events)
+    handler = VerificationResetPassHandler(uow_factory(), token_repo, events)
     try:
-        await handler.handle(ForgetPasswordCommand(email=body.email))
+        await handler.handle(VerificationResetPassCommand(email=body.email))
     except InvalidEmailError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)

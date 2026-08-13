@@ -17,13 +17,6 @@ class LoginRequest(BaseModel):
     device: str = Field(default="unknown", min_length=1, max_length=50)
 
 
-class AdminLoginRequest(BaseModel):
-    email: str = Field(..., min_length=3, max_length=254)
-    password: str = Field(..., min_length=1, max_length=128)
-    admin_password: str = Field(..., min_length=1, max_length=128)
-    device: str = Field(default="unknown", min_length=1, max_length=50)
-
-
 class LogoutRequest(BaseModel):
     device: str = Field(default="unknown", min_length=1, max_length=50)
 
