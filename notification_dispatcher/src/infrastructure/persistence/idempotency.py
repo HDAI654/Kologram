@@ -38,15 +38,13 @@ class SQLiteIdempotencyStore(IdempotencyStore):
         import aiosqlite
 
         self._conn = await aiosqlite.connect(self._path)
-        await self._conn.execute(
-            """
+        await self._conn.execute("""
             CREATE TABLE IF NOT EXISTS processed_events (
                 idempotency_key TEXT PRIMARY KEY,
                 event_type TEXT NOT NULL,
                 processed_at TEXT NOT NULL
             )
-            """
-        )
+            """)
         await self._conn.commit()
 
     async def close(self) -> None:

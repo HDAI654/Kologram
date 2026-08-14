@@ -1,4 +1,5 @@
 """Parsed integration event envelope matching producer wire format."""
+
 import hashlib
 import json
 from dataclasses import dataclass
