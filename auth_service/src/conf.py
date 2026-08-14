@@ -72,6 +72,16 @@ class Config:
     BLOCKED_EMAILS_REDIS_KEY: str = os.getenv(
         "BLOCKED_EMAILS_REDIS_KEY", "auth:blocked_emails"
     )
+    BLOCKED_EMAILS: frozenset[str] = frozenset(
+        e.strip().lower()
+        for e in os.getenv("BLOCKED_EMAILS", "").split(",")
+        if e.strip()
+    )
+    BLOCKED_EMAIL_DOMAINS: frozenset[str] = frozenset(
+        d.strip().lower()
+        for d in os.getenv("BLOCKED_EMAIL_DOMAINS", "").split(",")
+        if d.strip()
+    )
 
     # ===== AUTH KEYS =====
     AUTH_TOKEN_PRIVATE_KEY: str = (

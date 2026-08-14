@@ -43,9 +43,7 @@ class JwtTokenEncoder(TokenEncoder):
         session_id: SessionId,
         device: Device,
     ) -> str:
-        return self._encode(
-            user_id, session_id, device, "access", self._access_ttl
-        )
+        return self._encode(user_id, session_id, device, "access", self._access_ttl)
 
     def create_refresh_token(
         self,

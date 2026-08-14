@@ -1,6 +1,6 @@
 from src.domain.ports.verification_token_repository import VerificationTokenRepository
 from src.domain.value_objects.email import Email
-from src.domain.value_objects.email_verification_token import EmailVerificationToken
+from src.domain.value_objects.verification_token import VerificationToken
 
 
 class InMemoryVerificationTokenRepository(VerificationTokenRepository):
@@ -9,7 +9,7 @@ class InMemoryVerificationTokenRepository(VerificationTokenRepository):
 
     async def add(
         self,
-        token: EmailVerificationToken,
+        token: VerificationToken,
         email: Email,
         token_type: str,
         ttl_seconds: int,
@@ -18,7 +18,7 @@ class InMemoryVerificationTokenRepository(VerificationTokenRepository):
 
     async def get(
         self,
-        token: EmailVerificationToken,
+        token: VerificationToken,
         token_type: str,
     ) -> Email | None:
         raw = self._store.get((token_type, token.value))
@@ -26,7 +26,7 @@ class InMemoryVerificationTokenRepository(VerificationTokenRepository):
 
     async def delete(
         self,
-        token: EmailVerificationToken,
+        token: VerificationToken,
         token_type: str,
     ) -> None:
         self._store.pop((token_type, token.value), None)

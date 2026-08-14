@@ -9,8 +9,8 @@ from core.models import AuthUser, Category, Listing, ListingImage
 
 @admin.register(AuthUser)
 class AuthUserAdmin(admin.ModelAdmin):
-    list_display = ("id", "email", "role")
-    list_filter = ("role",)
+    list_display = ("id", "email", "status")
+    list_filter = ("status",)
     search_fields = ("id", "email")
     ordering = ("email",)
 

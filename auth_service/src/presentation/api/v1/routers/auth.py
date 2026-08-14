@@ -7,7 +7,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, Response, status
 from src.application.delete_account import DeleteAccountCommand, DeleteAccountHandler
-from src.application.verification_reset_password import VerificationResetPassCommand, VerificationResetPassHandler
+from src.application.verification_reset_password import (
+    VerificationResetPassCommand,
+    VerificationResetPassHandler,
+)
 from src.application.login import LoginCommand, LoginHandler
 from src.application.logout import LogoutCommand, LogoutHandler
 from src.application.reset_password import ResetPasswordCommand, ResetPasswordHandler
@@ -100,10 +103,10 @@ async def send_verification(
     except EmailBlockedError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
     except AccountSuspendedError:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, 
-                detail="Your account has been suspended. Please contact support for assistance."
-            )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been suspended. Please contact support for assistance.",
+        )
     except InvalidEmailError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
@@ -188,8 +191,8 @@ async def login(
         )
     except AccountSuspendedError:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Your account has been suspended. Please contact support for assistance."
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been suspended. Please contact support for assistance.",
         )
     return TokenPairResponse(
         access_token=result.access_token, refresh_token=result.refresh_token
