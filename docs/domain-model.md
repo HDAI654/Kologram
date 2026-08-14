@@ -14,9 +14,8 @@ class User {
     <<AggregateRoot>>
     +UserId id
     +String email
-    +String username
+    +String hashed_password
     +UserStatus status
-    +UserRole role
     +DateTime createdAt
     +DateTime updatedAt
 }
@@ -100,33 +99,14 @@ class ListingSnapshot {
     +DateTime createdAt
 }
 
-class UserProfile {
-    <<ReadModel>>
-    +UserId userId
-    +String username
-    +Decimal rating
-    +Integer totalListings
-}
-
 %% ==========================================================
 %% ENUMS
 %% ==========================================================
 
 class UserStatus {
     <<enumeration>>
-    PENDING
     ACTIVE
     SUSPENDED
-    BANNED
-    CLOSED
-}
-
-class UserRole {
-    <<enumeration>>
-    BUYER
-    SELLER
-    BOTH
-    ADMIN
 }
 
 class ListingStatus {
@@ -164,5 +144,4 @@ Category "1" --> "0..*" Category : parent
 Conversation "1" *-- "0..*" Message
 
 Listing ..> ListingSnapshot : projects
-User ..> UserProfile : projects
 ```

@@ -115,22 +115,27 @@ services:
 
   chat_service:
     build:
-      context: .
-      dockerfile: chat_service/Dockerfile
-    ports:
-      - "8003:8003"
-    environment:
-      APP_NAME: KologramChat
-      HTTP_ADDR: ":8003"
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/chat?sslmode=disable
-      RABBITMQ_ENABLED: "true"
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      RABBITMQ_EXCHANGE: chat.events
+      context: chat_service
+      dockerfile: Dockerfile
+    image: kologram-chat_service
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/chat?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+      - PORT=8003
+    ports:
+      - "8003:8003"
+    restart: unless-stopped 
 
   admin_service:
     build:
