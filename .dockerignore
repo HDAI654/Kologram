@@ -1,0 +1,12 @@
+**/.git
+**/.pytest_cache
+**/__pycache__
+**/*.pyc
+**/.env
+**/node_modules
+**/.venv
+**/venv
+**/*.sqlite3
+**/data
+Kologram-*.zip
+Kologram-*.tar.gz

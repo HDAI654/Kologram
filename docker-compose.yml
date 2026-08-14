@@ -1,0 +1,196 @@
+name: kologram
+
+services:
+  # ---------------------------------------------------------------------------
+  # Infrastructure
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    profiles:
+      - mail
+
+  # ---------------------------------------------------------------------------
+  # Application services
+  # ---------------------------------------------------------------------------
+  auth_service:
+    build:
+      context: .
+      dockerfile: auth_service/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      APP_NAME: KologramAuth
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/auth
+      REDIS_ENABLED: "true"
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_ENABLED: "true"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_EXCHANGE: auth.events
+      AUTH_PRIVATE_KEY_PATH: /app/auth_service/keys/private.pem
+      AUTH_PUBLIC_KEY_PATH: /app/auth_service/keys/public.pem
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  market_service:
+    build:
+      context: .
+      dockerfile: market_service/Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      APP_NAME: KologramMarket
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/market
+      REDIS_ENABLED: "false"
+      RABBITMQ_ENABLED: "true"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_EXCHANGE: listing.events
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  chat_service:
+    build:
+      context: .
+      dockerfile: chat_service/Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      APP_NAME: KologramChat
+      HTTP_ADDR: ":8003"
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/chat?sslmode=disable
+      RABBITMQ_ENABLED: "true"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_EXCHANGE: chat.events
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  admin_service:
+    build:
+      context: .
+      dockerfile: admin_service/Dockerfile
+    ports:
+      - "8004:8004"
+    environment:
+      APP_ENV: development
+      DJANGO_SECRET_KEY: dev-docker-admin-secret-change-me
+      ALLOWED_HOSTS: "*"
+      ADMIN_DB_ENGINE: django.db.backends.postgresql
+      ADMIN_DB_NAME: admin
+      ADMIN_DB_USER: postgres
+      ADMIN_DB_PASSWORD: postgres
+      ADMIN_DB_HOST: postgres
+      ADMIN_DB_PORT: "5432"
+      AUTH_DB_ENGINE: django.db.backends.postgresql
+      AUTH_DB_NAME: auth
+      AUTH_DB_USER: postgres
+      AUTH_DB_PASSWORD: postgres
+      AUTH_DB_HOST: postgres
+      AUTH_DB_PORT: "5432"
+      MARKET_DB_ENGINE: django.db.backends.postgresql
+      MARKET_DB_NAME: market
+      MARKET_DB_USER: postgres
+      MARKET_DB_PASSWORD: postgres
+      MARKET_DB_HOST: postgres
+      MARKET_DB_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth_service:
+        condition: service_started
+      market_service:
+        condition: service_started
+
+  notification_dispatcher:
+    build:
+      context: .
+      dockerfile: notification_dispatcher/Dockerfile
+    environment:
+      APP_NAME: notification-dispatcher
+      APP_ENV: development
+      RABBITMQ_ENABLED: "true"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_EXCHANGES: auth.events,listing.events,chat.events
+      RABBITMQ_QUEUE: notification.dispatcher
+      EMAIL_ENABLED: "false"
+      EMAIL_PROVIDER: console
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      IDEMPOTENCY_ENABLED: "true"
+      IDEMPOTENCY_DB_URL: sqlite+aiosqlite:////app/data/idempotency.db
+    volumes:
+      - notification_data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  notification_data:

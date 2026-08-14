@@ -6,7 +6,11 @@ import json
 
 import pytest
 
-from src.application.dispatcher import EventDispatcher, classify_error, default_job_registry
+from src.application.dispatcher import (
+    EventDispatcher,
+    classify_error,
+    default_job_registry,
+)
 from src.exceptions import (
     PermanentProcessingError,
     TransientProcessingError,
@@ -143,7 +147,9 @@ async def test_listing_status_changed(
 
 
 @pytest.mark.asyncio
-async def test_transient_email_failure(dispatcher: EventDispatcher, sender: ConsoleEmailSender):
+async def test_transient_email_failure(
+    dispatcher: EventDispatcher, sender: ConsoleEmailSender
+):
     sender.fail_next = True
     with pytest.raises(TransientProcessingError):
         await dispatcher.process_body(
