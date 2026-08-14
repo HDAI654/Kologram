@@ -64,8 +64,12 @@ ASGI_APPLICATION = "config.asgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.getenv("DJANGO_ADMIN_DB", str(BASE_DIR / "admin_panel.sqlite3")),
+        "ENGINE": os.getenv("ADMIN_DB_ENGINE", "django.db.backends.postgresql"),
+        "NAME": os.getenv("ADMIN_DB_NAME", "admin"),
+        "USER": os.getenv("ADMIN_DB_USER", "postgres"),
+        "PASSWORD": os.getenv("ADMIN_DB_PASSWORD", "postgres"),
+        "HOST": os.getenv("ADMIN_DB_HOST", "localhost"),
+        "PORT": os.getenv("ADMIN_DB_PORT", "5432"),
     },
     "auth": {
         "ENGINE": os.getenv("AUTH_DB_ENGINE", "django.db.backends.postgresql"),
