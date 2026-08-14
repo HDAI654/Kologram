@@ -10,7 +10,11 @@ from src.application.delete_listing import (
     DeleteListingResult,
 )
 from src.exceptions import SellerMismatchError
-from market_service.test.unit.application.conftest import LISTING_ID, OTHER_SELLER_ID, SELLER_ID
+from market_service.test.unit.application.conftest import (
+    LISTING_ID,
+    OTHER_SELLER_ID,
+    SELLER_ID,
+)
 
 
 async def test_delete_listing_success(mock_uow, mock_events, sample_listing):

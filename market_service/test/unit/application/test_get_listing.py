@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from src.application.get_listing import GetListingHandler, GetListingQuery, GetListingResult
+from src.application.get_listing import (
+    GetListingHandler,
+    GetListingQuery,
+    GetListingResult,
+)
 from src.exceptions import ListingNotFoundError
 from market_service.test.unit.application.conftest import LISTING_ID
 

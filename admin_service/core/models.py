@@ -30,7 +30,7 @@ class AuthUser(models.Model):
         ordering = ["email"]
 
     def __str__(self) -> str:
-        return f"{self.email} ({self.role})"
+        return f"{self.email} ({self.status})"
 
 
 # ---------------------------------------------------------------------------
