@@ -7,6 +7,7 @@ class DomainError(Exception):
 
 # ===== Value objects =====
 
+
 class VOError(DomainError):
     """Base value object error."""
 

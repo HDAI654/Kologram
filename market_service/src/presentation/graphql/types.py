@@ -1,4 +1,5 @@
 """Strawberry GraphQL types — presentation DTOs only."""
+
 import strawberry
 
 # ---------------------------------------------------------------------------

@@ -20,9 +20,7 @@ class ErrorManager:
         code = self._error_code(exc)
 
         if code == "INTERNAL_ERROR":
-            self._logger.exception(
-                "Unhandled error during %s", operation, exc_info=exc
-            )
+            self._logger.exception("Unhandled error during %s", operation, exc_info=exc)
             return GraphQLError(
                 "An internal error occurred",
                 extensions={"code": code},
