@@ -24,17 +24,13 @@ def _command(**overrides) -> CreateListingCommand:
 
 
 class TestCreateListing:
-    async def test_creates_listing_in_draft(
-        self, uow, event_publisher, make_category
-    ):
+    async def test_creates_listing_in_draft(self, uow, event_publisher, make_category):
         category = make_category()
         # Use the category's generated id so the FK lookup succeeds.
         await uow.categories.add(category)
         handler = CreateListingHandler(uow, event_publisher)
 
-        result = await handler.handle(
-            _command(category_id=category.id.value)
-        )
+        result = await handler.handle(_command(category_id=category.id.value))
 
         assert result.status == "DRAFT"
         assert result.listing_id
@@ -95,9 +91,7 @@ class TestCreateListing:
         assert uow.listings.added == []
         assert event_publisher.published == []
 
-    async def test_without_event_publisher_still_commits(
-        self, uow, make_category
-    ):
+    async def test_without_event_publisher_still_commits(self, uow, make_category):
         category = make_category()
         await uow.categories.add(category)
         handler = CreateListingHandler(uow, event_publisher=None)

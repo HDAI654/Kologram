@@ -41,9 +41,7 @@ class TestListSellerListings:
         )
         assert len(result.items) == 3
 
-    async def test_negative_offset_is_clamped_to_zero(
-        self, uow, make_listing
-    ):
+    async def test_negative_offset_is_clamped_to_zero(self, uow, make_listing):
         seller_id = str(uuid4())
         await uow.listings.add(make_listing(seller_id=seller_id))
 
@@ -54,8 +52,6 @@ class TestListSellerListings:
 
     async def test_empty_for_unknown_seller(self, uow):
         result = await ListSellerListingsHandler(uow).handle(
-            ListSellerListingsQuery(
-                seller_id=str(uuid4())
-            )
+            ListSellerListingsQuery(seller_id=str(uuid4()))
         )
         assert result.items == ()

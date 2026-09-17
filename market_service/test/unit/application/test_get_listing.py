@@ -52,8 +52,4 @@ class TestGetListing:
     async def test_missing_listing_propagates(self, uow):
         handler = GetListingHandler(uow)
         with pytest.raises(Exception):
-            await handler.handle(
-                GetListingQuery(
-                    listing_id=str(uuid4())
-                )
-            )
+            await handler.handle(GetListingQuery(listing_id=str(uuid4())))

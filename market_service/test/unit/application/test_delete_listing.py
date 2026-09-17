@@ -9,9 +9,7 @@ from src.exceptions import SellerMismatchError
 
 
 class TestDeleteListing:
-    async def test_deletes_owned_listing(
-        self, uow, event_publisher, make_listing
-    ):
+    async def test_deletes_owned_listing(self, uow, event_publisher, make_listing):
         listing = make_listing()
         await uow.listings.add(listing)
         handler = DeleteListingHandler(uow, event_publisher)
@@ -69,9 +67,7 @@ class TestDeleteListing:
         assert uow.committed is False
         assert event_publisher.published == []
 
-    async def test_without_event_publisher_still_commits(
-        self, uow, make_listing
-    ):
+    async def test_without_event_publisher_still_commits(self, uow, make_listing):
         listing = make_listing()
         await uow.listings.add(listing)
         handler = DeleteListingHandler(uow, event_publisher=None)

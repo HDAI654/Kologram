@@ -6,9 +6,7 @@ from uuid import uuid4
 
 
 class TestSearchListings:
-    async def test_default_filter_returns_only_active(
-        self, uow, make_listing
-    ):
+    async def test_default_filter_returns_only_active(self, uow, make_listing):
         active = make_listing(status="ACTIVE")
         draft = make_listing(status="DRAFT")
         await uow.listings.add(active)
@@ -35,21 +33,15 @@ class TestSearchListings:
             await uow.listings.add(make_listing(status="ACTIVE"))
 
         # limit=0 clamps to 1, limit=1000 clamps to 100.
-        low = await SearchListingsHandler(uow).handle(
-            SearchListingsQuery(limit=0)
-        )
+        low = await SearchListingsHandler(uow).handle(SearchListingsQuery(limit=0))
         assert low.limit == 1
 
-        high = await SearchListingsHandler(uow).handle(
-            SearchListingsQuery(limit=1000)
-        )
+        high = await SearchListingsHandler(uow).handle(SearchListingsQuery(limit=1000))
         assert high.limit == 100
 
     async def test_negative_offset_clamped(self, uow, make_listing):
         await uow.listings.add(make_listing(status="ACTIVE"))
-        result = await SearchListingsHandler(uow).handle(
-            SearchListingsQuery(offset=-5)
-        )
+        result = await SearchListingsHandler(uow).handle(SearchListingsQuery(offset=-5))
         assert result.offset == 0
 
     async def test_category_and_price_filters(self, uow, make_listing):

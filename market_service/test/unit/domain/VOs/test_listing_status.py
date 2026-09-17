@@ -3,7 +3,6 @@ import pytest
 from src.domain.value_objects.listing_status import ListingStatus
 from src.exceptions import InvalidListingStatusError
 
-
 ALL_STATUSES = ("DRAFT", "ACTIVE", "SOLD", "EXPIRED", "CANCELLED", "SUSPENDED")
 
 VALID_TRANSITIONS = {

@@ -7,9 +7,7 @@ from src.application.list_categories import (
 class TestListCategories:
     async def test_returns_all_categories(self, uow, make_category):
         await uow.categories.add(make_category(name="Electronics"))
-        await uow.categories.add(
-            make_category(name="Furniture", is_active=False)
-        )
+        await uow.categories.add(make_category(name="Furniture", is_active=False))
 
         result = await ListCategoriesHandler(uow).handle(ListCategoriesQuery())
 
@@ -18,9 +16,7 @@ class TestListCategories:
 
     async def test_active_only_filters_inactive(self, uow, make_category):
         await uow.categories.add(make_category(name="Electronics"))
-        await uow.categories.add(
-            make_category(name="Furniture", is_active=False)
-        )
+        await uow.categories.add(make_category(name="Furniture", is_active=False))
 
         result = await ListCategoriesHandler(uow).handle(
             ListCategoriesQuery(active_only=True)

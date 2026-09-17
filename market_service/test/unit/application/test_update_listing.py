@@ -108,9 +108,7 @@ class TestUpdateListing:
         assert uow.committed is False
         assert event_publisher.published == []
 
-    async def test_without_event_publisher_still_commits(
-        self, uow, make_listing
-    ):
+    async def test_without_event_publisher_still_commits(self, uow, make_listing):
         listing = make_listing(status="DRAFT")
         await uow.listings.add(listing)
         handler = UpdateListingHandler(uow, event_publisher=None)

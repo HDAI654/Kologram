@@ -42,7 +42,9 @@ class TestChangeListingStatus:
         assert event.old_status == "DRAFT"
         assert event.new_status == "CANCELLED"
 
-    async def test_mark_active_listing_as_sold(self, uow, event_publisher, make_listing):
+    async def test_mark_active_listing_as_sold(
+        self, uow, event_publisher, make_listing
+    ):
         listing = make_listing(status="ACTIVE")
         await uow.listings.add(listing)
         handler = ChangeListingStatusHandler(uow, event_publisher)
@@ -117,9 +119,7 @@ class TestChangeListingStatus:
         assert uow.rolled_back is True
         assert event_publisher.published == []
 
-    async def test_without_event_publisher_still_commits(
-        self, uow, make_listing
-    ):
+    async def test_without_event_publisher_still_commits(self, uow, make_listing):
         listing = make_listing(status="DRAFT")
         await uow.listings.add(listing)
         handler = ChangeListingStatusHandler(uow, event_publisher=None)

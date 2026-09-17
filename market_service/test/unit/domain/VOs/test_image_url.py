@@ -3,7 +3,6 @@ import pytest
 from src.domain.value_objects.image_url import ImageUrl
 from src.exceptions import InvalidImageUrlError
 
-
 _MAX_LEN = 2048
 _PREFIX = "https://example.com/"
 

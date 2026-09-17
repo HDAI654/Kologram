@@ -55,9 +55,7 @@ class TestCreateCategory:
         assert uow.rolled_back is True
         assert event_publisher.published == []
 
-    async def test_missing_parent_raises_category_not_found(
-        self, uow, event_publisher
-    ):
+    async def test_missing_parent_raises_category_not_found(self, uow, event_publisher):
         handler = CreateCategoryHandler(uow, event_publisher)
         with pytest.raises(CategoryNotFoundError):
             await handler.handle(
