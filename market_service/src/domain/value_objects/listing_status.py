@@ -1,6 +1,6 @@
 from typing import Self
 
-from shared.base_vo import BaseVO
+from src.domain.value_objects.base_vo import BaseVO
 from src.exceptions import InvalidListingStatusError
 
 _ALLOWED = frozenset({"DRAFT", "ACTIVE", "SOLD", "EXPIRED", "CANCELLED", "SUSPENDED"})

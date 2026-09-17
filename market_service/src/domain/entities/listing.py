@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from shared.entity import Entity
+from src.domain.entities.base_entity import Entity
 from src.domain.entities.listing_image import ListingImage
 from src.domain.value_objects.category_id import CategoryId
 from src.domain.value_objects.description import Description

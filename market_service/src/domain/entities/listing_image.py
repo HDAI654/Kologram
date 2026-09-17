@@ -1,4 +1,4 @@
-from shared.entity import Entity
+from src.domain.entities.base_entity import Entity
 from src.domain.value_objects.image_url import ImageUrl
 from src.domain.value_objects.listing_id import ListingId
 from src.domain.value_objects.sort_order import SortOrder

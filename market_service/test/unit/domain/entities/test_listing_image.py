@@ -1,12 +1,41 @@
+import uuid
+
 from src.domain.entities.listing_image import ListingImage
+from src.domain.value_objects.image_url import ImageUrl
+from src.domain.value_objects.listing_id import ListingId
+from src.domain.value_objects.sort_order import SortOrder
 
-LISTING = "550e8400-e29b-41d4-a716-446655440001"
 
+class TestListingImage:
+    def test_create_with_defaults(self):
+        listing_id = "listing-123"
+        url = "http://example.com/image.jpg"
 
-def test_create_listing_image() -> None:
-    img = ListingImage.create(
-        listing_id=LISTING, url="https://cdn.example/a.jpg", sort_order=1
-    )
-    assert img.listing_id.value == LISTING
-    assert img.url.value.startswith("https://")
-    assert img.sort_order.value == 1
+        image = ListingImage.create(listing_id=listing_id, url=url)
+
+        assert isinstance(image.id, str)
+        assert uuid.UUID(image.id)  # valid UUID
+        assert isinstance(image.listing_id, ListingId)
+        assert image.listing_id.value == listing_id
+        assert isinstance(image.url, ImageUrl)
+        assert image.url.value == url
+        assert isinstance(image.sort_order, SortOrder)
+        assert image.sort_order.value == 0
+
+    def test_create_with_all_fields(self):
+        listing_id = "listing-123"
+        url = "http://example.com/image.jpg"
+        image_id = str(uuid.uuid4())
+        sort_order = 5
+
+        image = ListingImage.create(
+            listing_id=listing_id,
+            url=url,
+            sort_order=sort_order,
+            id=image_id,
+        )
+
+        assert image.id == image_id
+        assert image.listing_id.value == listing_id
+        assert image.url.value == url
+        assert image.sort_order.value == sort_order
