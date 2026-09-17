@@ -1,5 +1,5 @@
 from datetime import date
-from shared.base_vo import BaseVO
+from src.domain.value_objects.base_vo import BaseVO
 from src.exceptions import InvalidDateError
 
 

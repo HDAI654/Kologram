@@ -1,4 +1,4 @@
-from shared.entity import Entity
+from src.domain.entities.entity import Entity
 from src.domain.value_objects.email import Email
 from src.domain.value_objects.hashed_password import HashedPassword
 from src.domain.value_objects.user_status import UserStatus

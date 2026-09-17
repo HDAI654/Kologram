@@ -1,5 +1,5 @@
 import re
-from shared.base_vo import BaseVO
+from src.domain.value_objects.base_vo import BaseVO
 from src.exceptions import InvalidEmailError
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")

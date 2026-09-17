@@ -1,4 +1,4 @@
-from shared.id_vo import ID
+from src.domain.value_objects.base_vo import ID
 from src.exceptions import InvalidVerificationTokenError
 
 

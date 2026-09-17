@@ -1,5 +1,5 @@
 from datetime import date
-from shared.entity import Entity
+from src.domain.entities.entity import Entity
 from src.domain.value_objects.date import Date
 from src.domain.value_objects.device import Device
 from src.domain.value_objects.session_id import SessionId

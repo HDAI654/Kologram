@@ -1,5 +1,5 @@
 import re
-from shared.base_vo import BaseVO
+from src.domain.value_objects.base_vo import BaseVO
 from src.exceptions import InvalidPasswordError
 
 _MIN_LEN = 8
