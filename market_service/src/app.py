@@ -12,14 +12,19 @@ from src.fake_dev_data import _seed_dev_categories, _seed_dev_listings
 
 def _build_event_publisher() -> EventPublisher:
     if Config.RABBITMQ_ENABLED:
-        from src.infrastructure.messaging.rabbitmq_event_publisher import RabbitMQEventPublisher
+        from src.infrastructure.messaging.rabbitmq_event_publisher import (
+            RabbitMQEventPublisher,
+        )
+
         return RabbitMQEventPublisher(
             url=Config.RABBITMQ_URL,
             exchange_name=Config.RABBITMQ_EXCHANGE,
         )
 
     from src.infrastructure.messaging.noop_event_publisher import NoOpEventPublisher
+
     return NoOpEventPublisher()
+
 
 def _build_uow() -> Callable[[], UnitOfWork]:
     if Config.APP_ENV == "development":
@@ -38,16 +43,19 @@ def _build_uow() -> Callable[[], UnitOfWork]:
             listings=_dev_listings,
             categories=_dev_categories,
         )
-    
+
     from src.infrastructure.persistence.unit_of_work import SQLAlchemyUnitOfWork
     from src.database import async_session_maker
+
     return lambda: SQLAlchemyUnitOfWork(async_session_maker)
 
 
 if Config.APP_ENV == "development":
     app = FastAPI(title="Kologram")
 else:
-    from src.infrastructure.messaging.rabbitmq_event_publisher import RabbitMQEventPublisher
+    from src.infrastructure.messaging.rabbitmq_event_publisher import (
+        RabbitMQEventPublisher,
+    )
     from src.database import engine
     from src.infrastructure.persistence.models import Base
 
@@ -66,7 +74,6 @@ else:
             await publisher.close()
         await engine.dispose()
 
-
     app = FastAPI(
         title="Market Service",
         description="GraphQL API for listings, categories and search (Cap marketplace).",
@@ -75,7 +82,7 @@ else:
     )
 
 app.state.event_publisher = _build_event_publisher()
-app.state.uow = _build_uow() 
+app.state.uow = _build_uow()
 
 graphql_app = GraphQLRouter(
     schema,
