@@ -1,24 +1,61 @@
-"""Unit tests for ListSellerListingsHandler — mocked UoW."""
-
-from unittest.mock import AsyncMock
-
+from uuid import uuid4
 from src.application.list_seller_listings import (
     ListSellerListingsHandler,
     ListSellerListingsQuery,
-    ListSellerListingsResult,
 )
-from market_service.test.unit.application.conftest import SELLER_ID
 
 
-async def test_list_seller_listings(mock_uow, sample_listing):
-    mock_uow.listings.list_by_seller = AsyncMock(return_value=[sample_listing])
-    handler = ListSellerListingsHandler(mock_uow)
+class TestListSellerListings:
+    async def test_returns_only_seller_listings(self, uow, make_listing):
+        seller_id = str(uuid4())
+        other_seller = str(uuid4())
+        await uow.listings.add(make_listing(seller_id=seller_id))
+        await uow.listings.add(make_listing(seller_id=seller_id))
+        await uow.listings.add(make_listing(seller_id=other_seller))
 
-    result = await handler.handle(
-        ListSellerListingsQuery(seller_id=SELLER_ID, limit=10, offset=0)
-    )
+        result = await ListSellerListingsHandler(uow).handle(
+            ListSellerListingsQuery(seller_id=seller_id)
+        )
 
-    assert isinstance(result, ListSellerListingsResult)
-    assert len(result.items) == 1
-    assert result.items[0].seller_id == SELLER_ID
-    mock_uow.listings.list_by_seller.assert_awaited_once()
+        assert len(result.items) == 2
+        assert all(item.seller_id == seller_id for item in result.items)
+
+    async def test_applies_limit_and_offset(self, uow, make_listing):
+        seller_id = str(uuid4())
+        for _ in range(5):
+            await uow.listings.add(make_listing(seller_id=seller_id))
+
+        result = await ListSellerListingsHandler(uow).handle(
+            ListSellerListingsQuery(seller_id=seller_id, limit=2, offset=1)
+        )
+
+        assert len(result.items) == 2
+
+    async def test_non_positive_limit_defaults_to_50(self, uow, make_listing):
+        seller_id = str(uuid4())
+        for _ in range(3):
+            await uow.listings.add(make_listing(seller_id=seller_id))
+
+        result = await ListSellerListingsHandler(uow).handle(
+            ListSellerListingsQuery(seller_id=seller_id, limit=0)
+        )
+        assert len(result.items) == 3
+
+    async def test_negative_offset_is_clamped_to_zero(
+        self, uow, make_listing
+    ):
+        seller_id = str(uuid4())
+        await uow.listings.add(make_listing(seller_id=seller_id))
+
+        result = await ListSellerListingsHandler(uow).handle(
+            ListSellerListingsQuery(seller_id=seller_id, offset=-10)
+        )
+        assert len(result.items) == 1
+
+    async def test_empty_for_unknown_seller(self, uow):
+        result = await ListSellerListingsHandler(uow).handle(
+            ListSellerListingsQuery(
+                seller_id=str(uuid4())
+            )
+        )
+        assert result.items == ()

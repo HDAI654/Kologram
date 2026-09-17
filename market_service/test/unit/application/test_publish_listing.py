@@ -1,43 +1,101 @@
-"""Unit tests for PublishListingHandler — mocked UoW."""
-
-from unittest.mock import AsyncMock
-
 import pytest
-
+from uuid import uuid4
 from src.application.publish_listing import (
     PublishListingCommand,
     PublishListingHandler,
-    PublishListingResult,
 )
-from src.exceptions import SellerMismatchError
-from market_service.test.unit.application.conftest import (
-    LISTING_ID,
-    OTHER_SELLER_ID,
-    SELLER_ID,
-)
+from src.domain.events.listing_published import ListingPublished
+from src.domain.events.listing_status_changed import ListingStatusChanged
+from src.exceptions import InvalidListingTransitionError, SellerMismatchError
 
 
-async def test_publish_listing_success(mock_uow, mock_events, sample_listing):
-    mock_uow.listings.get_by_id = AsyncMock(return_value=sample_listing)
-    handler = PublishListingHandler(mock_uow, mock_events)
+class TestPublishListing:
+    async def test_publishes_draft_listing_with_both_events(
+        self, uow, event_publisher, make_listing
+    ):
+        listing = make_listing(status="DRAFT")
+        await uow.listings.add(listing)
+        handler = PublishListingHandler(uow, event_publisher)
 
-    result = await handler.handle(
-        PublishListingCommand(listing_id=LISTING_ID, seller_id=SELLER_ID)
-    )
-
-    assert isinstance(result, PublishListingResult)
-    assert result.status == "ACTIVE"
-    mock_uow.listings.update.assert_awaited_once()
-    mock_uow.commit.assert_awaited_once()
-    mock_events.publish.assert_awaited()
-
-
-async def test_publish_listing_seller_mismatch(mock_uow, mock_events, sample_listing):
-    mock_uow.listings.get_by_id = AsyncMock(return_value=sample_listing)
-    handler = PublishListingHandler(mock_uow, mock_events)
-
-    with pytest.raises(SellerMismatchError):
-        await handler.handle(
-            PublishListingCommand(listing_id=LISTING_ID, seller_id=OTHER_SELLER_ID)
+        result = await handler.handle(
+            PublishListingCommand(
+                listing_id=listing.id.value,
+                seller_id=listing.seller_id.value,
+            )
         )
-    mock_uow.listings.update.assert_not_awaited()
+
+        assert result.status == "ACTIVE"
+        assert listing.status.value == "ACTIVE"
+        assert uow.committed is True
+        assert listing in uow.listings.updated
+
+        assert len(event_publisher.published) == 2
+        status_changed, published = event_publisher.published
+        assert isinstance(status_changed, ListingStatusChanged)
+        assert status_changed.old_status == "DRAFT"
+        assert status_changed.new_status == "ACTIVE"
+        assert isinstance(published, ListingPublished)
+        assert published.listing_id == listing.id.value
+        assert published.category_id == listing.category_id.value
+
+    async def test_missing_listing_raises_and_does_not_commit(
+        self, uow, event_publisher
+    ):
+        handler = PublishListingHandler(uow, event_publisher)
+        with pytest.raises(Exception):
+            await handler.handle(
+                PublishListingCommand(
+                    listing_id=str(uuid4()),
+                    seller_id=str(uuid4()),
+                )
+            )
+        assert uow.committed is False
+        assert event_publisher.published == []
+
+    async def test_seller_mismatch_raises(self, uow, event_publisher, make_listing):
+        listing = make_listing(status="DRAFT")
+        await uow.listings.add(listing)
+        handler = PublishListingHandler(uow, event_publisher)
+
+        with pytest.raises(SellerMismatchError):
+            await handler.handle(
+                PublishListingCommand(
+                    listing_id=listing.id.value,
+                    seller_id=str(uuid4()),
+                )
+            )
+        assert uow.committed is False
+        assert event_publisher.published == []
+
+    async def test_publishing_non_draft_raises_invalid_transition(
+        self, uow, event_publisher, make_listing
+    ):
+        listing = make_listing(status="ACTIVE")
+        await uow.listings.add(listing)
+        handler = PublishListingHandler(uow, event_publisher)
+
+        with pytest.raises(InvalidListingTransitionError):
+            await handler.handle(
+                PublishListingCommand(
+                    listing_id=listing.id.value,
+                    seller_id=listing.seller_id.value,
+                )
+            )
+        assert uow.committed is False
+        assert event_publisher.published == []
+
+    async def test_without_event_publisher_still_commits(
+        self, uow, make_listing
+    ):
+        listing = make_listing(status="DRAFT")
+        await uow.listings.add(listing)
+        handler = PublishListingHandler(uow, event_publisher=None)
+
+        result = await handler.handle(
+            PublishListingCommand(
+                listing_id=listing.id.value,
+                seller_id=listing.seller_id.value,
+            )
+        )
+        assert result.status == "ACTIVE"
+        assert uow.committed is True
