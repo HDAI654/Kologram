@@ -10,12 +10,14 @@ from src.exceptions import (
     InvalidVerificationTokenError,
 )
 
-
 _ID_CASES = [
     pytest.param(SessionId, InvalidSessionIdError, id="SessionId"),
     pytest.param(UserId, InvalidUserIdError, id="UserId"),
-    pytest.param(VerificationToken, InvalidVerificationTokenError, id="VerificationToken"),
+    pytest.param(
+        VerificationToken, InvalidVerificationTokenError, id="VerificationToken"
+    ),
 ]
+
 
 class TestSubclassConstruction:
     @pytest.mark.parametrize("vo_cls, _exc", _ID_CASES)

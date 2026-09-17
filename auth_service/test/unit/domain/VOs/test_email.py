@@ -42,7 +42,7 @@ class TestEmailRejections:
             "user",
             "@example.com",
             "user@",
-            "user@example",           # no dot in domain
+            "user@example",  # no dot in domain
             "user name@example.com",  # internal space
             "user@@example.com",
             "user@exa mple.com",
