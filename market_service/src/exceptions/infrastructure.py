@@ -27,15 +27,3 @@ class MessagingError(InfrastructureError):
 
 class MessagingConnectionError(MessagingError):
     """Failed to connect to the message bus."""
-
-
-class CacheError(InfrastructureError):
-    """Cache operation failed."""
-
-
-class CacheConnectionError(CacheError):
-    """Failed to connect to the cache."""
-
-
-class CacheOperationError(CacheError):
-    """Generic cache operation failure."""

@@ -1,12 +1,6 @@
-"""Strawberry GraphQL schema — Market Service presentation layer."""
-
-from __future__ import annotations
-
 import logging
-
 import strawberry
 from strawberry.types import Info
-
 from src.application.change_listing_status import (
     ChangeListingStatusCommand,
     ChangeListingStatusHandler,
@@ -23,7 +17,7 @@ from src.application.list_seller_listings import (
 from src.application.publish_listing import PublishListingCommand, PublishListingHandler
 from src.application.search_listings import SearchListingsHandler, SearchListingsQuery
 from src.application.update_listing import UpdateListingCommand, UpdateListingHandler
-from src.presentation.graphql.errors import raise_graphql_error
+from src.presentation.graphql.errors import ErrorManager
 from src.presentation.graphql.types import (
     CategoryType,
     ChangeListingStatusInput,
@@ -46,6 +40,7 @@ from src.presentation.graphql.types import (
 )
 
 logger = logging.getLogger(__name__)
+error_manager = ErrorManager(logger)
 
 
 @strawberry.type
@@ -54,11 +49,14 @@ class Query:
 
     @strawberry.field(description="Fetch a single listing by id.")
     async def listing(self, info: Info, listing_id: str) -> ListingType:
+        logger.info("fetching listing: listing_id=%s", listing_id)
         handler = GetListingHandler(info.context["uow_factory"]())
         try:
             result = await handler.handle(GetListingQuery(listing_id=listing_id))
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "listing")
+
+        logger.info("listing fetched successfully: listing_id=%s", listing_id)
         return ListingType(
             listing_id=result.listing_id,
             seller_id=result.seller_id,
@@ -101,7 +99,7 @@ class Query:
                 )
             )
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "search_listings")
         return SearchListingsResultType(
             items=[
                 ListingSnapshotType(
@@ -135,7 +133,7 @@ class Query:
                 ListSellerListingsQuery(seller_id=seller_id, limit=limit, offset=offset)
             )
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "seller_listings")
         return [
             ListingSnapshotType(
                 listing_id=i.listing_id,
@@ -161,7 +159,7 @@ class Query:
         try:
             result = await handler.handle(ListCategoriesQuery(active_only=active_only))
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "categories")
         return [
             CategoryType(
                 category_id=i.category_id,
@@ -200,7 +198,7 @@ class Mutation:
                 )
             )
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "create_listing")
         return CreateListingPayload(listing_id=result.listing_id, status=result.status)
 
     @strawberry.mutation(description="Update mutable fields of an owned listing.")
@@ -225,7 +223,7 @@ class Mutation:
                 )
             )
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "update_listing")
         return UpdateListingPayload(listing_id=result.listing_id, status=result.status)
 
     @strawberry.mutation(description="Delete an owned listing.")
@@ -242,7 +240,7 @@ class Mutation:
                 )
             )
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "delete_listing")
         return DeleteListingPayload(
             listing_id=result.listing_id, deleted=result.deleted
         )
@@ -261,7 +259,7 @@ class Mutation:
                 )
             )
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "publish_listing")
         return PublishListingPayload(listing_id=result.listing_id, status=result.status)
 
     @strawberry.mutation(description="Change listing status (sold, cancel, expire, …).")
@@ -280,7 +278,7 @@ class Mutation:
                 )
             )
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "change_listing_status")
         return ChangeListingStatusPayload(
             listing_id=result.listing_id, status=result.status
         )
@@ -297,7 +295,7 @@ class Mutation:
                 CreateCategoryCommand(name=input.name, parent_id=input.parent_id)
             )
         except Exception as exc:
-            raise_graphql_error(exc)
+            raise error_manager.handle_error(exc, "create_category")
         return CreateCategoryPayload(
             category_id=result.category_id,
             name=result.name,

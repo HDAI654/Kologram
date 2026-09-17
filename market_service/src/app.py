@@ -1,12 +1,6 @@
-"""Market Service — FastAPI host with Strawberry GraphQL presentation."""
-
-from __future__ import annotations
-
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from strawberry.fastapi import GraphQLRouter
-
 from src.conf import Config
 from src.database import async_session_maker, engine
 from src.domain.ports.event_publisher import EventPublisher

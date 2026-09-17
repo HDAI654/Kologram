@@ -7,52 +7,55 @@ class DomainError(Exception):
 
 # ===== Value objects =====
 
+class VOError(DomainError):
+    """Base value object error."""
 
-class InvalidListingIdError(DomainError):
+
+class InvalidListingIdError(VOError):
     """Listing id is not a valid UUID v4."""
 
 
-class InvalidCategoryIdError(DomainError):
+class InvalidCategoryIdError(VOError):
     """Category id is not a valid UUID v4."""
 
 
-class InvalidUserIdError(DomainError):
+class InvalidUserIdError(VOError):
     """User / seller id is not a valid UUID v4."""
 
 
-class InvalidMoneyError(DomainError):
+class InvalidMoneyError(VOError):
     """Money amount or currency is invalid."""
 
 
-class InvalidQuantityError(DomainError):
+class InvalidQuantityError(VOError):
     """Quantity is invalid."""
 
 
-class InvalidTitleError(DomainError):
+class InvalidTitleError(VOError):
     """Listing title is invalid."""
 
 
-class InvalidDescriptionError(DomainError):
+class InvalidDescriptionError(VOError):
     """Listing description is invalid."""
 
 
-class InvalidLocationError(DomainError):
+class InvalidLocationError(VOError):
     """Location string is invalid."""
 
 
-class InvalidListingStatusError(DomainError):
+class InvalidListingStatusError(VOError):
     """Listing status value is not recognized."""
 
 
-class InvalidCategoryNameError(DomainError):
+class InvalidCategoryNameError(VOError):
     """Category name is invalid."""
 
 
-class InvalidImageUrlError(DomainError):
+class InvalidImageUrlError(VOError):
     """Image URL is invalid."""
 
 
-class InvalidSortOrderError(DomainError):
+class InvalidSortOrderError(VOError):
     """Image sort order is invalid."""
 
 

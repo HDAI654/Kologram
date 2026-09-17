@@ -1,7 +1,4 @@
 """Strawberry GraphQL types — presentation DTOs only."""
-
-from __future__ import annotations
-
 import strawberry
 
 # ---------------------------------------------------------------------------

@@ -1,56 +1,52 @@
-"""Map domain/application exceptions to GraphQL-friendly errors."""
-
-from __future__ import annotations
-
+import logging
 from graphql import GraphQLError
-
 from src.exceptions import (
     CategoryAlreadyExistsError,
     CategoryInactiveError,
     CategoryNotFoundError,
-    InvalidCategoryNameError,
-    InvalidDescriptionError,
-    InvalidListingStatusError,
     InvalidListingTransitionError,
-    InvalidLocationError,
-    InvalidMoneyError,
-    InvalidQuantityError,
-    InvalidTitleError,
     ListingNotEditableError,
     ListingNotFoundError,
     SellerMismatchError,
-)
-
-_NOT_FOUND = (
-    ListingNotFoundError,
-    CategoryNotFoundError,
-)
-_FORBIDDEN = (SellerMismatchError,)
-_CONFLICT = (
-    InvalidListingTransitionError,
-    ListingNotEditableError,
-    CategoryInactiveError,
-    CategoryAlreadyExistsError,
-)
-_VALIDATION = (
-    InvalidTitleError,
-    InvalidDescriptionError,
-    InvalidMoneyError,
-    InvalidQuantityError,
-    InvalidLocationError,
-    InvalidListingStatusError,
-    InvalidCategoryNameError,
+    VOError,
 )
 
 
-def raise_graphql_error(exc: Exception) -> None:
-    """Raise a GraphQLError with a stable extension code for clients."""
-    if isinstance(exc, _NOT_FOUND):
-        raise GraphQLError(str(exc), extensions={"code": "NOT_FOUND"}) from exc
-    if isinstance(exc, _FORBIDDEN):
-        raise GraphQLError(str(exc), extensions={"code": "FORBIDDEN"}) from exc
-    if isinstance(exc, _CONFLICT):
-        raise GraphQLError(str(exc), extensions={"code": "CONFLICT"}) from exc
-    if isinstance(exc, _VALIDATION):
-        raise GraphQLError(str(exc), extensions={"code": "VALIDATION_ERROR"}) from exc
-    raise GraphQLError(str(exc), extensions={"code": "INTERNAL_ERROR"}) from exc
+class ErrorManager:
+    def __init__(self, logger: logging.Logger) -> None:
+        self._logger = logger
+
+    def handle_error(self, exc: Exception, operation: str) -> GraphQLError:
+        code = self._error_code(exc)
+
+        if code == "INTERNAL_ERROR":
+            self._logger.exception(
+                "Unhandled error during %s", operation, exc_info=exc
+            )
+            return GraphQLError(
+                "An internal error occurred",
+                extensions={"code": code},
+            )
+
+        return GraphQLError(str(exc), extensions={"code": code})
+
+    def _error_code(self, exc: Exception) -> str:
+        if isinstance(exc, (ListingNotFoundError, CategoryNotFoundError)):
+            return "NOT_FOUND"
+        if isinstance(exc, SellerMismatchError):
+            return "FORBIDDEN"
+        if isinstance(
+            exc,
+            (
+                InvalidListingTransitionError,
+                ListingNotEditableError,
+                CategoryInactiveError,
+                CategoryAlreadyExistsError,
+            ),
+        ):
+            return "CONFLICT"
+        if isinstance(exc, VOError):
+            return "VALIDATION_ERROR"
+        if isinstance(exc, VOError):
+            return "VALIDATION_ERROR"
+        return "INTERNAL_ERROR"

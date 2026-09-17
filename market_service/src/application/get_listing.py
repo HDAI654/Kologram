@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-
 from src.domain.ports.unit_of_work import UnitOfWork
 from src.domain.value_objects.listing_id import ListingId
 

@@ -16,13 +16,6 @@ class Config:
 
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/1")
-    REDIS_ENABLED: bool = os.getenv("REDIS_ENABLED", "false").lower() in (
-        "1",
-        "true",
-        "yes",
-    )
-
     RABBITMQ_URL: str = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
     RABBITMQ_ENABLED: bool = os.getenv("RABBITMQ_ENABLED", "false").lower() in (
         "1",
