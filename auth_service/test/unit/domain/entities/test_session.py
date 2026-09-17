@@ -1,68 +1,122 @@
-import pytest
 from datetime import date
+
+import pytest
+
 from src.domain.entities.session import Session
+from src.domain.value_objects.date import Date
+from src.domain.value_objects.device import Device
 from src.domain.value_objects.session_id import SessionId
 from src.domain.value_objects.user_id import UserId
-from src.domain.value_objects.device import Device
-from src.domain.value_objects.date import Date
-from src.exceptions import InvalidUserIdError, InvalidDeviceError, InvalidDateError
+from src.exceptions import (
+    InvalidDateError,
+    InvalidDeviceError,
+    InvalidSessionIdError,
+    InvalidUserIdError,
+)
 
 
-class TestSession:
-    def test_init_valid(self):
-        session_id = SessionId("3bb6a3ca-66dc-440e-8d11-d8cca7ad7792")
-        user_id = UserId("3bb6a3ca-66dc-440e-8d11-d8cca7ad7793")
-        device = Device("iPhone 12")
-        created_at = Date("2026-08-12")
-        session = Session(session_id, user_id, device, created_at)
-        assert session.id == session_id
-        assert session.user_id == user_id
-        assert session.device == device
-        assert session.created_at == created_at
+@pytest.fixture
+def user_id() -> str:
+    return UserId.generate().value
 
-    def test_create_defaults(self):
-        user_id_str = "3bb6a3ca-66dc-440e-8d11-d8cca7ad7794"
-        session = Session.create(user_id=user_id_str)
+
+class TestSessionCreateDefaults:
+    def test_generates_session_id(self, user_id):
+        session = Session.create(user_id=user_id)
+
         assert isinstance(session.id, SessionId)
-        assert session.user_id.value == user_id_str
+
+    def test_binds_user_id(self, user_id):
+        session = Session.create(user_id=user_id)
+
+        assert isinstance(session.user_id, UserId)
+        assert session.user_id.value == user_id
+
+    def test_device_defaults_to_unknown(self, user_id):
+        session = Session.create(user_id=user_id)
+
+        assert isinstance(session.device, Device)
         assert session.device.value == "unknown"
+
+    def test_created_at_defaults_to_today(self, user_id):
+        session = Session.create(user_id=user_id)
+
+        assert isinstance(session.created_at, Date)
         assert session.created_at.value == date.today()
 
-    def test_create_with_custom_values(self):
-        user_id_str = "3bb6a3ca-66dc-440e-8d11-d8cca7ad7795"
-        id_str = "3bb6a3ca-66dc-440e-8d11-d8cca7ad7796"
-        device_str = "Chrome on Windows"
-        created_at_str = "2025-01-01"
-        session = Session.create(
-            user_id=user_id_str,
-            device=device_str,
-            id=id_str,
-            created_at=created_at_str,
-        )
-        assert session.id.value == id_str
-        assert session.user_id.value == user_id_str
-        assert session.device.value == device_str
-        assert session.created_at.value == date(2025, 1, 1)
 
-    def test_create_invalid_user_id(self):
+class TestSessionCreateExplicitFields:
+    def test_explicit_device(self, user_id):
+        session = Session.create(user_id=user_id, device="iPhone 15")
+
+        assert session.device.value == "iPhone 15"
+
+    def test_explicit_session_id(self, user_id):
+        session_id = SessionId.generate().value
+        session = Session.create(user_id=user_id, id=session_id)
+
+        assert session.id.value == session_id
+
+    def test_explicit_created_at_as_iso_string(self, user_id):
+        session = Session.create(user_id=user_id, created_at="2024-01-15")
+
+        assert session.created_at.value == date(2024, 1, 15)
+
+    def test_explicit_created_at_as_date_object(self, user_id):
+        value = date(2024, 1, 15)
+        session = Session.create(user_id=user_id, created_at=value)
+
+        assert session.created_at.value == value
+
+    def test_generated_session_ids_are_unique(self, user_id):
+        a = Session.create(user_id=user_id)
+        b = Session.create(user_id=user_id)
+
+        assert a.id != b.id
+
+
+class TestSessionCreateRejections:
+    def test_invalid_user_id(self):
         with pytest.raises(InvalidUserIdError):
             Session.create(user_id="not-a-uuid")
 
-    def test_create_invalid_device(self):
+    def test_invalid_device(self, user_id):
         with pytest.raises(InvalidDeviceError):
-            Session.create(user_id="3bb6a3ca-66dc-440e-8d11-d8cca7ad7797", device="")
+            Session.create(user_id=user_id, device="")
 
-    def test_create_invalid_created_at(self):
+    def test_invalid_session_id(self, user_id):
+        with pytest.raises(InvalidSessionIdError):
+            Session.create(user_id=user_id, id="not-a-uuid")
+
+    def test_invalid_created_at_string(self, user_id):
         with pytest.raises(InvalidDateError):
-            Session.create(
-                user_id="3bb6a3ca-66dc-440e-8d11-d8cca7ad7798",
-                created_at="invalid-date",
-            )
+            Session.create(user_id=user_id, created_at="not-a-date")
 
-    def test_create_created_at_date_object(self):
-        dt = date(2024, 12, 31)
-        session = Session.create(
-            user_id="3bb6a3ca-66dc-440e-8d11-d8cca7ad7799",
-            created_at=dt,
+
+class TestSessionConstructor:
+    def test_direct_construction(self):
+        session = Session(
+            id=SessionId.generate(),
+            user_id=UserId.generate(),
+            device=Device("iPhone"),
+            created_at=Date(date(2024, 1, 15)),
         )
-        assert session.created_at.value == dt
+
+        assert session.device.value == "iPhone"
+        assert session.created_at.value == date(2024, 1, 15)
+
+
+class TestSessionIdentity:
+    def test_equal_when_all_attributes_match(self, user_id):
+        session_id = SessionId.generate().value
+        a = Session.create(user_id=user_id, id=session_id)
+        b = Session.create(user_id=user_id, id=session_id)
+
+        assert a == b
+
+    def test_not_equal_when_device_differs(self, user_id):
+        session_id = SessionId.generate().value
+        a = Session.create(user_id=user_id, id=session_id, device="iPhone")
+        b = Session.create(user_id=user_id, id=session_id, device="Pixel")
+
+        assert a != b

@@ -1,86 +1,159 @@
 import pytest
+
 from src.domain.entities.user import User
-from src.domain.value_objects.user_id import UserId
 from src.domain.value_objects.email import Email
 from src.domain.value_objects.hashed_password import HashedPassword
+from src.domain.value_objects.user_id import UserId
 from src.domain.value_objects.user_status import UserStatus
 from src.exceptions import (
-    InvalidUserIdError,
     InvalidEmailError,
     InvalidHashedPasswordError,
+    InvalidUserIdError,
     InvalidUserStatusError,
 )
 
 
-class TestUser:
-    def test_init_valid_default_status(self):
-        user_id = UserId("3bb6a3ca-66dc-440e-8d11-d8cca7ad779a")
-        email = Email("test@example.com")
-        hashed = HashedPassword("$2b$12$abc...")
-        user = User(user_id, email, hashed)
-        assert user.id == user_id
-        assert user.email == email
-        assert user.hashed_password == hashed
-        assert user.status == UserStatus.active()
+@pytest.fixture
+def credentials() -> dict[str, str]:
+    return {
+        "email": "user@example.com",
+        "hashed_password": "$2b$12$abcdefghijklmnopqrstuv",
+    }
 
-    def test_init_with_custom_status(self):
-        user_id = UserId("3bb6a3ca-66dc-440e-8d11-d8cca7ad779b")
-        email = Email("test@example.com")
-        hashed = HashedPassword("$2b$12$abc...")
-        status = UserStatus.suspended()
-        user = User(user_id, email, hashed, status)
-        assert user.status == status
 
-    def test_create_defaults(self):
-        email_str = "test@example.com"
-        hashed_str = "$2b$12$abc..."
-        user = User.create(email=email_str, hashed_password=hashed_str)
+class TestUserCreateDefaults:
+    def test_generates_user_id(self, credentials):
+        user = User.create(**credentials)
+
         assert isinstance(user.id, UserId)
-        assert user.email.value == email_str
-        assert user.hashed_password.value == hashed_str
-        assert user.status == UserStatus.active()
 
-    def test_create_with_custom_id_and_status(self):
-        id_str = "3bb6a3ca-66dc-440e-8d11-d8cca7ad779c"
-        email_str = "test@example.com"
-        hashed_str = "$2b$12$abc..."
-        status_str = "SUSPENDED"
+    def test_normalizes_email(self, credentials):
         user = User.create(
-            email=email_str,
-            hashed_password=hashed_str,
-            id=id_str,
-            status=status_str,
+            email="  User@Example.COM  ",
+            hashed_password=credentials["hashed_password"],
         )
-        assert user.id.value == id_str
-        assert user.status == UserStatus.suspended()
 
-    def test_create_invalid_id(self):
-        with pytest.raises(InvalidUserIdError):
-            User.create(
-                email="test@example.com", hashed_password="hash", id="not-a-uuid"
-            )
+        assert isinstance(user.email, Email)
+        assert user.email.value == "user@example.com"
 
-    def test_create_invalid_email(self):
+    def test_wraps_hashed_password(self, credentials):
+        user = User.create(**credentials)
+
+        assert isinstance(user.hashed_password, HashedPassword)
+        assert user.hashed_password.value == credentials["hashed_password"]
+
+    def test_status_defaults_to_active(self, credentials):
+        user = User.create(**credentials)
+
+        assert isinstance(user.status, UserStatus)
+        assert user.status.value == "ACTIVE"
+        assert user.status.is_active is True
+
+    def test_generated_user_ids_are_unique(self, credentials):
+        a = User.create(**credentials)
+        b = User.create(**credentials)
+
+        assert a.id != b.id
+
+
+class TestUserCreateExplicitFields:
+    def test_explicit_user_id(self, credentials):
+        user_id = UserId.generate().value
+        user = User.create(**credentials, id=user_id)
+
+        assert user.id.value == user_id
+
+    def test_explicit_suspended_status(self, credentials):
+        user = User.create(**credentials, status="SUSPENDED")
+
+        assert user.status.value == "SUSPENDED"
+        assert user.status.is_active is False
+
+    def test_status_is_case_insensitive(self, credentials):
+        user = User.create(**credentials, status="suspended")
+
+        assert user.status.value == "SUSPENDED"
+
+
+class TestUserCreateRejections:
+    def test_invalid_email(self):
         with pytest.raises(InvalidEmailError):
-            User.create(email="invalid", hashed_password="hash")
+            User.create(email="not-an-email", hashed_password="hash")
 
-    def test_create_invalid_hashed_password(self):
+    def test_empty_hashed_password(self):
         with pytest.raises(InvalidHashedPasswordError):
-            User.create(email="test@example.com", hashed_password="")
+            User.create(email="user@example.com", hashed_password="")
 
-    def test_create_invalid_status(self):
+    def test_invalid_user_id(self, credentials):
+        with pytest.raises(InvalidUserIdError):
+            User.create(**credentials, id="not-a-uuid")
+
+    def test_invalid_status(self, credentials):
         with pytest.raises(InvalidUserStatusError):
-            User.create(
-                email="test@example.com",
-                hashed_password="hash",
-                status="INACTIVE",
-            )
+            User.create(**credentials, status="PENDING")
 
-    def test_change_password(self):
-        user_id = UserId("3bb6a3ca-66dc-440e-8d11-d8cca7ad779d")
-        email = Email("test@example.com")
-        old_hash = HashedPassword("old_hash")
-        user = User(user_id, email, old_hash)
-        new_hash = HashedPassword("new_hash")
+
+class TestUserChangePassword:
+    def test_replaces_hash(self, credentials):
+        user = User.create(**credentials)
+        new_hash = HashedPassword("$2b$12$newhashnewhashnewhash")
+
         user.change_password(new_hash)
+
         assert user.hashed_password == new_hash
+
+    def test_accepts_plain_string_hash_value(self, credentials):
+        user = User.create(**credentials)
+        replacement = HashedPassword("$2b$12$anothervalidhashvalue")
+
+        user.change_password(replacement)
+
+        assert user.hashed_password.value == "$2b$12$anothervalidhashvalue"
+
+
+class TestUserConstructor:
+    def test_direct_construction_defaults_to_active(self):
+        user = User(
+            id=UserId.generate(),
+            email=Email("user@example.com"),
+            hashed_password=HashedPassword("$2b$12$h"),
+        )
+
+        assert user.status.value == "ACTIVE"
+
+    def test_direct_construction_with_suspended_status(self):
+        user = User(
+            id=UserId.generate(),
+            email=Email("user@example.com"),
+            hashed_password=HashedPassword("$2b$12$h"),
+            status=UserStatus.suspended(),
+        )
+
+        assert user.status.value == "SUSPENDED"
+
+
+class TestUserIdentity:
+    def test_equal_when_all_attributes_match(self):
+        user_id = UserId.generate().value
+        a = User.create(
+            email="user@example.com", hashed_password="$2b$12$h", id=user_id
+        )
+        b = User.create(
+            email="user@example.com", hashed_password="$2b$12$h", id=user_id
+        )
+
+        assert a == b
+
+    def test_not_equal_when_status_differs(self):
+        user_id = UserId.generate().value
+        a = User.create(
+            email="user@example.com", hashed_password="$2b$12$h", id=user_id
+        )
+        b = User.create(
+            email="user@example.com",
+            hashed_password="$2b$12$h",
+            id=user_id,
+            status="SUSPENDED",
+        )
+
+        assert a != b
