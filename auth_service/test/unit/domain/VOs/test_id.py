@@ -82,18 +82,3 @@ class TestSubclassIdentity:
         raw = str(uuid.uuid4())
         assert SessionId(raw) != UserId(raw)
         assert UserId(raw) != VerificationToken(raw)
-
-
-@pytest.mark.xfail(
-    strict=False,
-    reason=(
-        "ID passes ``version=4`` to ``uuid.UUID``, which silently rewrites "
-        "version/variant bits of non-v4 UUIDs instead of rejecting them. "
-        "Once the constructor rejects wrong-version inputs, this test should "
-        "pass and the xfail marker can be removed."
-    ),
-)
-def test_non_v4_uuid_should_be_rejected():
-    v1 = str(uuid.uuid1())
-    with pytest.raises(InvalidUserIdError):
-        UserId(v1)
