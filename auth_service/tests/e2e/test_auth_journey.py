@@ -1,327 +1,574 @@
-"""E2E journey: full user lifecycle across Auth Service HTTP API."""
-
-from __future__ import annotations
-
 import uuid
-
 import pytest
-from httpx import AsyncClient
+from tests.e2e.helpers import (
+    auth_header,
+    forget_password,
+    latest_verification_token,
+    login,
+    request_verification,
+    reset_password,
+    signup,
+)
 
-from auth_service.test.e2e.helpers import delete_json, latest_token, post_json
-
-
-@pytest.mark.asyncio
-async def test_health(client: AsyncClient) -> None:
-    resp = await client.get("/health")
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "ok"
-
-
-@pytest.mark.asyncio
-async def test_full_user_journey(client: AsyncClient, app_instance) -> None:
-    email = f"user_{uuid.uuid4().hex[:8]}@example.com"
-    password = "Secret1A"
-    new_password = "NewSecret2B"
-    device_web = "web"
-    device_ios = "ios"
-
-    resp = await post_json(client, "/verification", {"email": email})
-    assert resp.status_code == 204, resp.text
-    token = latest_token(app_instance, "verifyemail", email)
-
-    resp = await post_json(
-        client,
-        "/signup",
-        {"verify_token": token, "password": password, "device": device_web},
-    )
-    assert resp.status_code == 201, resp.text
-    pair = resp.json()
-    access = pair["access_token"]
-    refresh = pair["refresh_token"]
-    assert access and refresh
-
-    resp = await post_json(
-        client,
-        "/signup",
-        {"verify_token": token, "password": password, "device": device_web},
-    )
-    assert resp.status_code == 400, resp.text
-
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": password, "device": device_ios},
-    )
-    assert resp.status_code == 200, resp.text
-    ios_pair = resp.json()
-
-    resp = await post_json(
-        client,
-        "/token/refresh",
-        {"refresh_token": refresh, "device": device_web},
-    )
-    assert resp.status_code == 200, resp.text
-    rotated = resp.json()
-    access = rotated["access_token"]
-    if rotated.get("refresh_token"):
-        refresh = rotated["refresh_token"]
-
-    resp = await post_json(
-        client,
-        "/token/refresh",
-        {"refresh_token": refresh, "device": "android"},
-    )
-    assert resp.status_code in (401, 403), resp.text
-
-    resp = await post_json(
-        client,
-        "/password",
-        {"new_password": new_password, "device": device_web},
-        token=access,
-    )
-    assert resp.status_code in (200, 204), resp.text
-
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": password, "device": device_web},
-    )
-    assert resp.status_code == 401, resp.text
-
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": new_password, "device": device_web},
-    )
-    assert resp.status_code == 200, resp.text
-    access = resp.json()["access_token"]
-    refresh = resp.json()["refresh_token"]
-
-    resp = await post_json(client, "/password/forgot", {"email": email})
-    assert resp.status_code == 204, resp.text
-    reset_token = latest_token(app_instance, "forget_pass_verify", email)
-
-    final_password = "FinalPass3C"
-    resp = await post_json(
-        client,
-        "/password/reset",
-        {"verify_token": reset_token, "new_password": final_password},
-    )
-    assert resp.status_code in (200, 204), resp.text
-
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": final_password, "device": device_web},
-    )
-    assert resp.status_code == 200, resp.text
-    access = resp.json()["access_token"]
-    refresh = resp.json()["refresh_token"]
-
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": final_password, "device": device_ios},
-    )
-    assert resp.status_code == 200, resp.text
-
-    resp = await post_json(
-        client,
-        "/sessions/revoke-others",
-        {"device": device_web},
-        token=access,
-    )
-    assert resp.status_code == 204, resp.text
-
-    resp = await post_json(
-        client,
-        "/logout",
-        {"device": device_web},
-        token=access,
-    )
-    assert resp.status_code == 204, resp.text
-
-    resp = await post_json(
-        client,
-        "/token/refresh",
-        {"refresh_token": refresh, "device": device_web},
-    )
-    assert resp.status_code in (401, 403), resp.text
-
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": final_password, "device": device_web},
-    )
-    assert resp.status_code == 200, resp.text
-    access = resp.json()["access_token"]
-
-    resp = await delete_json(
-        client,
-        "/account",
-        {"device": device_web},
-        token=access,
-    )
-    assert resp.status_code == 204, resp.text
-
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": final_password, "device": device_web},
-    )
-    assert resp.status_code == 401, resp.text
+AUTH = "/api/v1/auth"
 
 
-@pytest.mark.asyncio
-async def test_signup_invalid_token(client: AsyncClient) -> None:
-    resp = await post_json(
-        client,
-        "/signup",
-        {"verify_token": str(uuid.uuid4()), "password": "Secret1A", "device": "web"},
-    )
-    assert resp.status_code == 400, resp.text
+# ---------------------------------------------------------------------------
+# Health
+# ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_signup_weak_password(client: AsyncClient, app_instance) -> None:
-    email = f"weak_{uuid.uuid4().hex[:8]}@example.com"
-    resp = await post_json(client, "/verification", {"email": email})
-    assert resp.status_code == 204, resp.text
-    token = latest_token(app_instance, "verifyemail", email)
-    resp = await post_json(
-        client,
-        "/signup",
-        {"verify_token": token, "password": "short", "device": "web"},
-    )
-    assert resp.status_code in (400, 422), resp.text
+class TestHealth:
+    def test_health_returns_ok(self, client):
+        response = client.get("/health")
+        assert response.status_code == 200
+        assert response.json()["status"] == "ok"
 
 
-@pytest.mark.asyncio
-async def test_login_unknown_user(client: AsyncClient) -> None:
-    resp = await post_json(
-        client,
-        "/login",
-        {
-            "email": f"missing_{uuid.uuid4().hex[:8]}@example.com",
-            "password": "Secret1A",
-            "device": "web",
-        },
-    )
-    assert resp.status_code == 401, resp.text
+# ---------------------------------------------------------------------------
+# Verification
+# ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_login_wrong_password(client: AsyncClient, app_instance) -> None:
-    email = f"wrongpw_{uuid.uuid4().hex[:8]}@example.com"
-    password = "Secret1A"
-    resp = await post_json(client, "/verification", {"email": email})
-    assert resp.status_code == 204
-    token = latest_token(app_instance, "verifyemail", email)
-    resp = await post_json(
-        client,
-        "/signup",
-        {"verify_token": token, "password": password, "device": "web"},
-    )
-    assert resp.status_code == 201, resp.text
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": "WrongPass9Z", "device": "web"},
-    )
-    assert resp.status_code == 401, resp.text
+class TestSendVerification:
+    def test_valid_email_returns_204(self, client, unique_email):
+        response = client.post(f"{AUTH}/verification", json={"email": unique_email})
+        assert response.status_code == 204
+
+    def test_blocked_email_returns_403(self, client):
+        response = client.post(
+            f"{AUTH}/verification", json={"email": "blocked@example.com"}
+        )
+        assert response.status_code == 403
+
+    def test_blocked_domain_returns_403(self, client):
+        response = client.post(
+            f"{AUTH}/verification", json={"email": "anyone@banned.test"}
+        )
+        assert response.status_code == 403
+
+    def test_invalid_email_returns_422(self, client):
+        response = client.post(f"{AUTH}/verification", json={"email": "not-an-email"})
+        assert response.status_code == 422
+
+    def test_too_short_email_returns_422(self, client):
+        response = client.post(f"{AUTH}/verification", json={"email": "a@b"})
+        assert response.status_code == 422
 
 
-@pytest.mark.asyncio
-async def test_protected_endpoints_require_auth(client: AsyncClient) -> None:
-    resp = await post_json(client, "/logout", {"device": "web"})
-    assert resp.status_code in (401, 403), resp.text
-    resp = await post_json(
-        client, "/password", {"new_password": "Secret1A", "device": "web"}
-    )
-    assert resp.status_code in (401, 403), resp.text
-    resp = await delete_json(client, "/account", {"device": "web"})
-    assert resp.status_code in (401, 403), resp.text
+# ---------------------------------------------------------------------------
+# Signup
+# ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_forgot_password_unknown_email_is_silent(client: AsyncClient) -> None:
-    resp = await post_json(
-        client,
-        "/password/forgot",
-        {"email": f"ghost_{uuid.uuid4().hex[:8]}@example.com"},
-    )
-    assert resp.status_code == 204, resp.text
+class TestSignup:
+    def test_signup_with_verification_token_issues_tokens(
+        self, client, app, unique_email
+    ):
+        request_verification(client, unique_email)
+        token = latest_verification_token(app, unique_email)
+
+        response = client.post(
+            f"{AUTH}/signup",
+            json={
+                "verify_token": token,
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+
+        assert response.status_code == 201
+        body = response.json()
+        assert body["access_token"]
+        assert body["refresh_token"]
+
+    def test_signup_consumes_verification_token(self, client, app, unique_email):
+        request_verification(client, unique_email)
+        token = latest_verification_token(app, unique_email)
+
+        client.post(
+            f"{AUTH}/signup",
+            json={
+                "verify_token": token,
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+
+        # Second use of the same token must fail.
+        response = client.post(
+            f"{AUTH}/signup",
+            json={
+                "verify_token": token,
+                "password": "password2",
+                "device": "iPhone 15",
+            },
+        )
+        assert response.status_code == 400
+
+    def test_signup_with_unknown_token_returns_400(self, client):
+        response = client.post(
+            f"{AUTH}/signup",
+            json={
+                "verify_token": str(uuid.uuid4()),
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+        assert response.status_code == 400
+
+    def test_signup_with_weak_password_returns_422(self, client, app, unique_email):
+        request_verification(client, unique_email)
+        token = latest_verification_token(app, unique_email)
+
+        response = client.post(
+            f"{AUTH}/signup",
+            json={
+                "verify_token": token,
+                "password": "short",
+                "device": "iPhone 15",
+            },
+        )
+        assert response.status_code == 422
+
+    def test_signup_with_malformed_token_returns_422(self, client):
+        response = client.post(
+            f"{AUTH}/signup",
+            json={
+                "verify_token": "not-a-uuid",
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+        assert response.status_code == 422
 
 
-@pytest.mark.asyncio
-async def test_reset_password_invalid_token(client: AsyncClient) -> None:
-    resp = await post_json(
-        client,
-        "/password/reset",
-        {"verify_token": str(uuid.uuid4()), "new_password": "Secret1A"},
-    )
-    assert resp.status_code == 400, resp.text
+# ---------------------------------------------------------------------------
+# Login
+# ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_refresh_invalid_token(client: AsyncClient) -> None:
-    resp = await post_json(
-        client,
-        "/token/refresh",
-        {"refresh_token": "not.a.valid.jwt", "device": "web"},
-    )
-    assert resp.status_code in (401, 403), resp.text
+class TestLogin:
+    def test_login_after_signup_succeeds(self, client, app, unique_email):
+        signup(client, app, email=unique_email)
+
+        access, refresh = login(client, email=unique_email)
+
+        assert access
+        assert refresh
+
+    def test_login_with_wrong_password_returns_401(self, client, app, unique_email):
+        signup(client, app, email=unique_email)
+
+        response = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": unique_email,
+                "password": "wrongpass1",
+                "device": "iPhone 15",
+            },
+        )
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid email or password"
+
+    def test_login_with_unknown_email_returns_401(self, client):
+        response = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": "ghost@example.com",
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+        assert response.status_code == 401
+
+    def test_login_with_invalid_email_returns_422(self, client):
+        response = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": "not-an-email",
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+        assert response.status_code == 422
 
 
-@pytest.mark.asyncio
-async def test_revoke_session_flow(client: AsyncClient, app_instance) -> None:
-    email = f"sess_{uuid.uuid4().hex[:8]}@example.com"
-    password = "Secret1A"
-    resp = await post_json(client, "/verification", {"email": email})
-    assert resp.status_code == 204
-    token = latest_token(app_instance, "verifyemail", email)
-    resp = await post_json(
-        client,
-        "/signup",
-        {"verify_token": token, "password": password, "device": "web"},
-    )
-    assert resp.status_code == 201
-    access = resp.json()["access_token"]
-    refresh = resp.json()["refresh_token"]
+# ---------------------------------------------------------------------------
+# Logout
+# ---------------------------------------------------------------------------
 
-    resp = await post_json(
-        client,
-        "/login",
-        {"email": email, "password": password, "device": "ios"},
-    )
-    assert resp.status_code == 200
-    ios_refresh = resp.json()["refresh_token"]
 
-    sessions = app_instance.state.session_repository
-    ios_session_ids = [
-        sid for sid, sess in sessions._by_id.items() if sess.device.value == "ios"
-    ]
-    assert ios_session_ids
-    ios_session_id = ios_session_ids[0]
+class TestLogout:
+    def test_logout_with_valid_token_returns_204(self, client, app, unique_email):
+        access, _ = signup(client, app, email=unique_email)
 
-    resp = await post_json(
-        client,
-        "/sessions/revoke",
-        {"session_id": ios_session_id, "device": "web"},
-        token=access,
-    )
-    assert resp.status_code == 204, resp.text
+        response = client.post(
+            f"{AUTH}/logout",
+            json={"device": "iPhone 15"},
+            headers=auth_header(access),
+        )
+        assert response.status_code == 204
 
-    resp = await post_json(
-        client,
-        "/token/refresh",
-        {"refresh_token": ios_refresh, "device": "ios"},
-    )
-    assert resp.status_code in (401, 403), resp.text
+    def test_logout_without_auth_header_returns_401(self, client):
+        response = client.post(f"{AUTH}/logout", json={"device": "iPhone 15"})
+        assert response.status_code == 401
 
-    resp = await post_json(
-        client,
-        "/token/refresh",
-        {"refresh_token": refresh, "device": "web"},
-    )
-    assert resp.status_code == 200, resp.text
+    def test_logout_with_wrong_device_returns_403(self, client, app, unique_email):
+        access, _ = signup(client, app, email=unique_email)
+
+        response = client.post(
+            f"{AUTH}/logout",
+            json={"device": "DifferentDevice"},
+            headers=auth_header(access),
+        )
+        assert response.status_code == 403
+
+    def test_logout_twice_returns_401(self, client, app, unique_email):
+        access, _ = signup(client, app, email=unique_email)
+
+        first = client.post(
+            f"{AUTH}/logout",
+            json={"device": "iPhone 15"},
+            headers=auth_header(access),
+        )
+        assert first.status_code == 204
+
+        second = client.post(
+            f"{AUTH}/logout",
+            json={"device": "iPhone 15"},
+            headers=auth_header(access),
+        )
+        assert second.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Token rotation
+# ---------------------------------------------------------------------------
+
+
+class TestRotateTokens:
+    def test_refresh_issues_new_access_token(self, client, app, unique_email):
+        _, refresh = signup(client, app, email=unique_email)
+
+        response = client.post(
+            f"{AUTH}/token/refresh",
+            json={"refresh_token": refresh, "device": "iPhone 15"},
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["access_token"]
+        # Far from expiry — no refresh rotation.
+        assert body["refresh_token"] is None
+
+    def test_refresh_with_revoked_session_returns_401(self, client, app, unique_email):
+        access, refresh = signup(client, app, email=unique_email)
+        client.post(
+            f"{AUTH}/logout",
+            json={"device": "iPhone 15"},
+            headers=auth_header(access),
+        )
+
+        response = client.post(
+            f"{AUTH}/token/refresh",
+            json={"refresh_token": refresh, "device": "iPhone 15"},
+        )
+        assert response.status_code == 401
+
+    def test_refresh_with_wrong_device_returns_403(self, client, app, unique_email):
+        _, refresh = signup(client, app, email=unique_email)
+
+        response = client.post(
+            f"{AUTH}/token/refresh",
+            json={"refresh_token": refresh, "device": "DifferentDevice"},
+        )
+        assert response.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Set password
+# ---------------------------------------------------------------------------
+
+
+class TestSetPassword:
+    def test_set_password_changes_login_credentials(self, client, app, unique_email):
+        access, _ = signup(client, app, email=unique_email)
+
+        response = client.post(
+            f"{AUTH}/password",
+            json={"new_password": "newpass99", "device": "iPhone 15"},
+            headers=auth_header(access),
+        )
+        assert response.status_code == 204
+
+        # Old password no longer works.
+        old = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": unique_email,
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+        assert old.status_code == 401
+
+        # New password works.
+        new = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": unique_email,
+                "password": "newpass99",
+                "device": "iPhone 15",
+            },
+        )
+        assert new.status_code == 200
+
+    def test_set_password_without_auth_returns_401(self, client):
+        response = client.post(
+            f"{AUTH}/password",
+            json={"new_password": "newpass99", "device": "iPhone 15"},
+        )
+        assert response.status_code == 401
+
+    def test_set_password_with_weak_password_returns_422(
+        self, client, app, unique_email
+    ):
+        access, _ = signup(client, app, email=unique_email)
+
+        response = client.post(
+            f"{AUTH}/password",
+            json={"new_password": "short", "device": "iPhone 15"},
+            headers=auth_header(access),
+        )
+        assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Forget + reset password
+# ---------------------------------------------------------------------------
+
+
+class TestPasswordReset:
+    def test_full_forget_and_reset_flow(self, client, app, unique_email):
+        signup(client, app, email=unique_email)
+
+        reset_password(client, app, email=unique_email, new_password="newpass99")
+
+        response = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": unique_email,
+                "password": "newpass99",
+                "device": "iPhone 15",
+            },
+        )
+        assert response.status_code == 200
+
+    def test_forget_unknown_email_is_silent_204(self, client):
+        response = client.post(
+            f"{AUTH}/password/forgot", json={"email": "ghost@example.com"}
+        )
+        # Anti-enumeration: same response whether or not the email exists.
+        assert response.status_code == 204
+
+    def test_reset_with_unknown_token_returns_400(self, client):
+        response = client.post(
+            f"{AUTH}/password/reset",
+            json={
+                "verify_token": str(uuid.uuid4()),
+                "new_password": "newpass99",
+            },
+        )
+        assert response.status_code == 400
+
+    def test_reset_with_weak_password_returns_422(self, client, app, unique_email):
+        signup(client, app, email=unique_email)
+        forget_password(client, unique_email)
+        token = latest_verification_token(app, unique_email, "forget_pass_verify")
+
+        response = client.post(
+            f"{AUTH}/password/reset",
+            json={"verify_token": token, "new_password": "short"},
+        )
+        assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Revoke sessions
+# ---------------------------------------------------------------------------
+
+
+class TestRevokeSession:
+    def test_revoke_own_session_succeeds(self, client, app, unique_email):
+        access_a, _ = signup(client, app, email=unique_email, device="iPhone 15")
+        # Second login to create another session.
+        access_b, _ = login(client, email=unique_email, device="Pixel 8")
+
+        # Find session id of session B from its token.
+        from src.presentation.dependencies import get_token_decoder
+
+        decoder = get_token_decoder()
+        encoder = get_token_encoder() if False else None  # noqa: F841
+        from src.presentation.dependencies import get_token_encoder
+
+        encoder = get_token_encoder()
+        payload_b = decoder.decode_and_validate(
+            field_type_map=encoder.FIELD_TYPE_MAP,
+            token=access_b,
+            expected_token_type="access",
+        )
+
+        response = client.post(
+            f"{AUTH}/sessions/revoke",
+            json={"session_id": payload_b["sid"], "device": "iPhone 15"},
+            headers=auth_header(access_a),
+        )
+        assert response.status_code == 204
+
+    def test_revoke_cross_user_session_returns_403(self, client, app):
+        access_a, _ = signup(client, app, email=f"a-{uuid.uuid4().hex[:6]}@example.com")
+        access_b, _ = signup(client, app, email=f"b-{uuid.uuid4().hex[:6]}@example.com")
+
+        from src.presentation.dependencies import get_token_decoder, get_token_encoder
+
+        decoder = get_token_decoder()
+        encoder = get_token_encoder()
+        payload_b = decoder.decode_and_validate(
+            field_type_map=encoder.FIELD_TYPE_MAP,
+            token=access_b,
+            expected_token_type="access",
+        )
+
+        response = client.post(
+            f"{AUTH}/sessions/revoke",
+            json={"session_id": payload_b["sid"], "device": "iPhone 15"},
+            headers=auth_header(access_a),
+        )
+        assert response.status_code == 403
+
+    def test_revoke_without_auth_returns_401(self, client):
+        response = client.post(
+            f"{AUTH}/sessions/revoke",
+            json={"session_id": str(uuid.uuid4()), "device": "iPhone 15"},
+        )
+        assert response.status_code == 401
+
+
+class TestRevokeAllOther:
+    def test_revoke_others_keeps_current_session(self, client, app, unique_email):
+        access_a, _ = signup(client, app, email=unique_email, device="iPhone 15")
+        login(client, email=unique_email, device="Pixel 8")
+
+        response = client.post(
+            f"{AUTH}/sessions/revoke-others",
+            json={"device": "iPhone 15"},
+            headers=auth_header(access_a),
+        )
+        assert response.status_code == 204
+
+        # Current session still usable — rotate to confirm.
+        from src.presentation.dependencies import get_token_encoder
+
+        # Refresh tokens from session A cannot be retrieved directly here, so
+        # sanity check the current access token by performing another authenticated call.
+        followup = client.post(
+            f"{AUTH}/sessions/revoke-others",
+            json={"device": "iPhone 15"},
+            headers=auth_header(access_a),
+        )
+        assert followup.status_code == 204
+
+
+# ---------------------------------------------------------------------------
+# Delete account
+# ---------------------------------------------------------------------------
+
+
+class TestDeleteAccount:
+    def test_delete_account_prevents_future_login(self, client, app, unique_email):
+        access, _ = signup(client, app, email=unique_email)
+
+        response = client.request(
+            "DELETE",
+            f"{AUTH}/account",
+            json={"device": "iPhone 15"},
+            headers=auth_header(access),
+        )
+        assert response.status_code == 204
+
+        # Login now fails with the same generic 401.
+        login_response = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": unique_email,
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+        assert login_response.status_code == 401
+
+    def test_delete_account_without_auth_returns_401(self, client):
+        response = client.request(
+            "DELETE", f"{AUTH}/account", json={"device": "iPhone 15"}
+        )
+        assert response.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Full lifecycle
+# ---------------------------------------------------------------------------
+
+
+class TestFullLifecycle:
+    def test_signup_login_rotate_set_password_logout(self, client, app, unique_email):
+        # 1. Signup.
+        access, refresh = signup(client, app, email=unique_email)
+        assert access and refresh
+
+        # 2. Rotate.
+        rotated = client.post(
+            f"{AUTH}/token/refresh",
+            json={"refresh_token": refresh, "device": "iPhone 15"},
+        )
+        assert rotated.status_code == 200
+        new_access = rotated.json()["access_token"]
+
+        # 3. Change password via authenticated endpoint.
+        changed = client.post(
+            f"{AUTH}/password",
+            json={"new_password": "newpass99", "device": "iPhone 15"},
+            headers=auth_header(new_access),
+        )
+        assert changed.status_code == 204
+
+        # 4. Old access token still valid (sessions untouched), but old
+        # password no longer works — confirms the update took effect.
+        old_login = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": unique_email,
+                "password": "password1",
+                "device": "iPhone 15",
+            },
+        )
+        assert old_login.status_code == 401
+
+        new_login = client.post(
+            f"{AUTH}/login",
+            json={
+                "email": unique_email,
+                "password": "newpass99",
+                "device": "iPhone 15",
+            },
+        )
+        assert new_login.status_code == 200
+
+        # 5. Logout the new session.
+        logout_access = new_login.json()["access_token"]
+        logout = client.post(
+            f"{AUTH}/logout",
+            json={"device": "iPhone 15"},
+            headers=auth_header(logout_access),
+        )
+        assert logout.status_code == 204

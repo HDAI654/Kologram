@@ -20,7 +20,7 @@ _PUBLIC_KEY_PATH = Path(
 class Config:
 
     # ===== APP =====
-    APP_NAME: str = os.getenv("APP_NAME", "CapAuth")
+    APP_NAME: str = os.getenv("APP_NAME", "KologramAuth")
     APP_ENV: str = os.getenv("APP_ENV", "development")
 
     # ===== VERIFICATION EMAIL =====
