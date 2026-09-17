@@ -1,13 +1,8 @@
 """Auth Service FastAPI application."""
 
-from __future__ import annotations
-
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
-
 from src.conf import Config
-from src.database import async_session_maker, engine
 from src.domain.ports.email_blocklist_checker import EmailBlocklistChecker
 from src.domain.ports.event_publisher import EventPublisher
 from src.domain.ports.session_repository import SessionRepository
@@ -66,8 +61,11 @@ def _build_email_blocklist(redis_client) -> EmailBlocklistChecker:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    if Config.APP_ENV != "development":
+        from src.database import engine
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
     publisher = app.state.event_publisher
     if isinstance(publisher, RabbitMQEventPublisher):
@@ -80,7 +78,10 @@ async def lifespan(app: FastAPI):
     redis_client = getattr(app.state, "redis_client", None)
     if redis_client is not None:
         await redis_client.aclose()
-    await engine.dispose()
+    if Config.APP_ENV != "development":
+        from src.database import engine
+
+        await engine.dispose()
 
 
 app = FastAPI(
@@ -90,8 +91,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.state.engine = engine
-app.state.session_factory = async_session_maker
+if Config.APP_ENV != "development":
+    from src.database import engine, async_session_maker
+
+    app.state.engine = engine
+    app.state.session_factory = async_session_maker
 app.state.event_publisher = _build_event_publisher()
 
 _redis = create_redis_client() if Config.REDIS_ENABLED else None

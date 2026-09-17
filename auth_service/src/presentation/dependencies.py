@@ -2,10 +2,9 @@
 
 from collections.abc import Callable
 from typing import Annotated
-
 from fastapi import Depends, Request
+from src.conf import Config
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 from src.domain.ports.email_blocklist_checker import EmailBlocklistChecker
 from src.domain.ports.event_publisher import EventPublisher
 from src.domain.ports.password_hasher import PasswordHasher
@@ -15,13 +14,19 @@ from src.domain.ports.token_encoder import TokenEncoder
 from src.domain.ports.unit_of_work import UnitOfWork
 from src.domain.ports.verification_token_repository import VerificationTokenRepository
 from src.infrastructure.persistence.unit_of_work import SQLAlchemyUnitOfWork
+from src.infrastructure.persistence.in_memory_unit_of_work import InMemoryUnitOfWork
+from src.infrastructure.persistence.repositories.in_memory_user_repository import (
+    InMemoryUserRepository,
+)
 from src.infrastructure.security.bcrypt_password_hasher import BcryptPasswordHasher
 from src.infrastructure.security.jwt_token_decoder import JwtTokenDecoder
 from src.infrastructure.security.jwt_token_encoder import JwtTokenEncoder
 
+_dev_users = InMemoryUserRepository()
 
-def get_session_factory(request: Request) -> async_sessionmaker[AsyncSession]:
-    return request.app.state.session_factory
+
+def get_session_factory(request: Request) -> async_sessionmaker[AsyncSession] | None:
+    return getattr(request.app.state, "session_factory", None)
 
 
 def get_uow_factory(
@@ -29,8 +34,15 @@ def get_uow_factory(
         async_sessionmaker[AsyncSession], Depends(get_session_factory)
     ],
 ) -> Callable[[], UnitOfWork]:
+    if Config.APP_ENV != "development":
+
+        def factory() -> UnitOfWork:
+            return SQLAlchemyUnitOfWork(session_factory)
+
+        return factory
+
     def factory() -> UnitOfWork:
-        return SQLAlchemyUnitOfWork(session_factory)
+        return InMemoryUnitOfWork(_dev_users)
 
     return factory
 
