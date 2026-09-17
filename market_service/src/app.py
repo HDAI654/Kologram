@@ -51,7 +51,11 @@ def _build_uow() -> Callable[[], UnitOfWork]:
 
 
 if Config.APP_ENV == "development":
-    app = FastAPI(title="Kologram")
+    app = FastAPI(
+        title="Kologram",
+        description="GraphQL API for listings, categories and search (Kologram marketplace).",
+        version="1.0.0",
+    )
 else:
     from src.infrastructure.messaging.rabbitmq_event_publisher import (
         RabbitMQEventPublisher,
@@ -75,8 +79,8 @@ else:
         await engine.dispose()
 
     app = FastAPI(
-        title="Market Service",
-        description="GraphQL API for listings, categories and search (Cap marketplace).",
+        title="Kologram",
+        description="GraphQL API for listings, categories and search (Kologram marketplace).",
         version="1.0.0",
         lifespan=lifespan,
     )
