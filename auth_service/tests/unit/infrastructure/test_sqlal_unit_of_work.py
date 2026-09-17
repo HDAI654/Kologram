@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError, TimeoutError
 
 from src.exceptions import (
     DatabaseConnectionError,

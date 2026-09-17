@@ -3,6 +3,7 @@ from sqlalchemy.exc import (
     IntegrityError,
     OperationalError,
     SQLAlchemyError,
+    TimeoutError,
 )
 
 from src.domain.value_objects.email import Email

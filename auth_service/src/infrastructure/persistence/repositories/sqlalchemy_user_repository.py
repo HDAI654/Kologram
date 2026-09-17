@@ -36,8 +36,7 @@ class SQLAlchemyUserRepository(UserRepository):
         try:
             await self._execute_db_operation("add_user", self._session.flush)
         except DatabaseOperationError as exc:
-            # Unique email violation → domain conflict
-            if "unique" in str(exc).lower() or "integrity" in str(exc).lower():
+            if "unique" in str(exc).lower():
                 raise UserAlreadyExistsError(
                     f"User with email '{user.email.value}' already exists"
                 ) from exc

@@ -44,7 +44,11 @@ class TestDecodeToken:
         assert payload["type"] == "access"
 
     def test_invalid_signature_raises(self, decoder):
-        other = jwt.encode({"sub": "u-1"}, "different-secret", algorithm="HS256")
+        other = jwt.encode(
+            {"sub": "u-1"},
+            "different-secret-xxxxxxx-xxxxxxxxx-xxxxxx",
+            algorithm="HS256",
+        )
         with pytest.raises(TokenInfrastructureError):
             decoder.decode_token(other)
 

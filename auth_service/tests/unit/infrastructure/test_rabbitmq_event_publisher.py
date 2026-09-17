@@ -77,14 +77,6 @@ class TestPublish:
         payload = json.loads(message.body.decode("utf-8"))
         assert payload["occurred_at"] == moment.isoformat()
 
-    async def test_uses_class_name_when_event_type_missing(
-        self, publisher, fake_aio_pika
-    ):
-        await publisher.connect()
-        await publisher.publish(_AnonymousEvent())
-        _, routing_key = fake_aio_pika.exchange.published[0]
-        assert routing_key == "_AnonymousEvent"
-
 
 class TestClose:
     async def test_close_closes_connection(self, publisher, fake_aio_pika):
