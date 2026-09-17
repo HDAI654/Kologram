@@ -62,9 +62,7 @@ class TestAdd:
         ttl_arg = pipe.expire.call_args.args[1]
         assert ttl_arg == Config.REFRESH_TOKEN_EXPIRE_MINUTES * 60
 
-    async def test_connection_error_translated(
-        self, repo, redis_client, make_session
-    ):
+    async def test_connection_error_translated(self, repo, redis_client, make_session):
         pipe = redis_client.pipeline.return_value
         pipe.execute = __import__("unittest.mock", fromlist=["AsyncMock"]).AsyncMock(
             side_effect=RedisConnectionError("down")
@@ -83,9 +81,7 @@ class TestGetById:
         }
         redis_client.hgetall.return_value = raw
 
-        result = await repo.get_by_id(
-            SessionId("1a2b3c4d-1111-4111-8111-111111111111")
-        )
+        result = await repo.get_by_id(SessionId("1a2b3c4d-1111-4111-8111-111111111111"))
 
         assert isinstance(result, Session)
         assert result.device.value == "iPhone"

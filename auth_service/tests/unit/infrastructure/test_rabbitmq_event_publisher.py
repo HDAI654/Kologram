@@ -18,9 +18,7 @@ class _SampleEvent:
     event_type: str = "UserRegistered"
     user_id: str = ""
     email: str = ""
-    occurred_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,9 +67,7 @@ class TestPublish:
         assert payload["user_id"] == "u-1"
         assert payload["email"] == "user@example.com"
 
-    async def test_datetime_serialized_to_isoformat(
-        self, publisher, fake_aio_pika
-    ):
+    async def test_datetime_serialized_to_isoformat(self, publisher, fake_aio_pika):
         await publisher.connect()
         moment = datetime(2024, 5, 1, 12, 0, tzinfo=timezone.utc)
 

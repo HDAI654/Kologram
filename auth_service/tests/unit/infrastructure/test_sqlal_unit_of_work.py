@@ -46,9 +46,7 @@ class TestExit:
         session.rollback.assert_awaited_once()
         session.close.assert_awaited_once()
 
-    async def test_close_still_runs_when_rollback_fails(
-        self, session_factory, session
-    ):
+    async def test_close_still_runs_when_rollback_fails(self, session_factory, session):
         session.rollback.side_effect = RuntimeError("rollback failed")
         uow = SQLAlchemyUnitOfWork(session_factory)
         with pytest.raises(RuntimeError):

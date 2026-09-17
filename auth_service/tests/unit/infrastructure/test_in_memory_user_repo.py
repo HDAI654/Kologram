@@ -30,9 +30,7 @@ class TestAdd:
         user = make_user(email="a@example.com")
         await repo.add(user)
         with pytest.raises(UserAlreadyExistsError):
-            await repo.add(
-                make_user(email="b@example.com", user_id=user.id.value)
-            )
+            await repo.add(make_user(email="b@example.com", user_id=user.id.value))
 
 
 class TestGetById:
