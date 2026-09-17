@@ -45,6 +45,4 @@ class ErrorManager:
             return "CONFLICT"
         if isinstance(exc, VOError):
             return "VALIDATION_ERROR"
-        if isinstance(exc, VOError):
-            return "VALIDATION_ERROR"
         return "INTERNAL_ERROR"
