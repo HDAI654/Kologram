@@ -8,7 +8,7 @@ from src.domain.value_objects.sort_order import SortOrder
 
 class TestListingImage:
     def test_create_with_defaults(self):
-        listing_id = "listing-123"
+        listing_id = str(uuid.uuid4())
         url = "http://example.com/image.jpg"
 
         image = ListingImage.create(listing_id=listing_id, url=url)
@@ -23,7 +23,7 @@ class TestListingImage:
         assert image.sort_order.value == 0
 
     def test_create_with_all_fields(self):
-        listing_id = "listing-123"
+        listing_id = str(uuid.uuid4())
         url = "http://example.com/image.jpg"
         image_id = str(uuid.uuid4())
         sort_order = 5

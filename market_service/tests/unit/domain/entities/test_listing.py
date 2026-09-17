@@ -1,6 +1,6 @@
 import time
 from datetime import datetime, timezone
-
+import uuid
 import pytest
 
 from src.domain.entities.listing import Listing
@@ -20,8 +20,8 @@ from src.exceptions import InvalidListingTransitionError, ListingNotEditableErro
 @pytest.fixture
 def listing_data():
     return {
-        "seller_id": "seller-123",
-        "category_id": "cat-123",
+        "seller_id": str(uuid.uuid4()),
+        "category_id": str(uuid.uuid4()),
         "title": "Test Listing",
         "description": "A test description",
         "price_amount": 100.0,
@@ -81,6 +81,8 @@ class TestListing:
         original_updated_at = listing.updated_at
         time.sleep(0.001)
 
+        _category_id = str(uuid.uuid4())
+
         listing.update_details(
             title="New Title",
             description="New Description",
@@ -88,7 +90,7 @@ class TestListing:
             currency="EUR",
             quantity=10,
             location="London",
-            category_id="cat-456",
+            category_id=_category_id,
         )
 
         assert listing.title.value == "New Title"
@@ -97,11 +99,11 @@ class TestListing:
         assert listing.price.currency == "EUR"
         assert listing.quantity.value == 10
         assert listing.location.value == "London"
-        assert listing.category_id.value == "cat-456"
+        assert listing.category_id.value == _category_id
         assert listing.updated_at > original_updated_at
 
     def test_update_details_when_not_editable_raises(self, listing_data):
-        listing = Listing.create(**listing_data, status="active")
+        listing = Listing.create(**listing_data, status="sold")
         with pytest.raises(ListingNotEditableError):
             listing.update_details(title="New Title")
 
@@ -173,7 +175,7 @@ class TestListing:
         assert listing.updated_at > original_updated_at
 
     def test_add_image_when_not_editable_raises(self, listing_data):
-        listing = Listing.create(**listing_data, status="active")
+        listing = Listing.create(**listing_data, status="sold")
         with pytest.raises(ListingNotEditableError):
             listing.add_image(url="http://example.com/image.jpg")
 
@@ -191,6 +193,6 @@ class TestListing:
         assert listing.updated_at > original_updated_at
 
     def test_clear_images_when_not_editable_raises(self, listing_data):
-        listing = Listing.create(**listing_data, status="active")
+        listing = Listing.create(**listing_data, status="sold")
         with pytest.raises(ListingNotEditableError):
             listing.clear_images()
