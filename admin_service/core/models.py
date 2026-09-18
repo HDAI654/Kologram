@@ -65,6 +65,7 @@ class Category(models.Model):
     def __str__(self) -> str:
         return self.name
 
+
 class ListingStatus(models.TextChoices):
     DRAFT = "DRAFT"
     ACTIVE = "ACTIVE"
@@ -73,12 +74,14 @@ class ListingStatus(models.TextChoices):
     CANCELLED = "CANCELLED"
     SUSPENDED = "SUSPENDED"
 
+
 class CurrencyChoices(models.TextChoices):
     USD = "USD"
     EUR = "EUR"
     GBP = "GBP"
     TRY = "TRY"
     AED = "AED"
+
 
 class Listing(models.Model):
     """Maps to Market Service table `listings`."""
@@ -89,9 +92,13 @@ class Listing(models.Model):
     title = models.CharField(max_length=120)
     description = models.TextField(blank=True, default="")
     price_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    currency = models.CharField(max_length=3, choices=CurrencyChoices.choices, default="USD")
+    currency = models.CharField(
+        max_length=3, choices=CurrencyChoices.choices, default="USD"
+    )
     quantity = models.IntegerField(default=1)
-    status = models.CharField(max_length=20, choices=ListingStatus.choices, db_index=True)
+    status = models.CharField(
+        max_length=20, choices=ListingStatus.choices, db_index=True
+    )
     location = models.CharField(max_length=200)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()

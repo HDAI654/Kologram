@@ -1,17 +1,28 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
+# ===== APP =====
+
+APP_NAME = os.getenv("APP_NAME", "Kologram")
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-change-me-admin-service")
 DEBUG = os.getenv("APP_ENV", "development") != "production"
+
+
+# ===== HOST / SECURITY =====
+
 ALLOWED_HOSTS = [
     h.strip()
     for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
     if h.strip()
 ]
+
+
+# ===== APPS =====
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -23,6 +34,9 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
 ]
 
+
+# ===== MIDDLEWARE =====
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -32,6 +46,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+
+# ===== TEMPLATES =====
 
 ROOT_URLCONF = "config.urls"
 
@@ -50,41 +67,36 @@ TEMPLATES = [
     },
 ]
 
+
+# ===== WSGI / ASGI =====
+
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# ---------------------------------------------------------------------------
-# Databases
-# ---------------------------------------------------------------------------
+
+# ===== DATABASES =====
 
 DATABASES = {
-    "default": {
-        "ENGINE": os.getenv("ADMIN_DB_ENGINE", "django.db.backends.postgresql"),
-        "NAME": os.getenv("ADMIN_DB_NAME", "admin"),
-        "USER": os.getenv("ADMIN_DB_USER", "postgres"),
-        "PASSWORD": os.getenv("ADMIN_DB_PASSWORD", "postgres"),
-        "HOST": os.getenv("ADMIN_DB_HOST", "localhost"),
-        "PORT": os.getenv("ADMIN_DB_PORT", "5432"),
-    },
-    "auth": {
-        "ENGINE": os.getenv("AUTH_DB_ENGINE", "django.db.backends.postgresql"),
-        "NAME": os.getenv("AUTH_DB_NAME", "auth"),
-        "USER": os.getenv("AUTH_DB_USER", "postgres"),
-        "PASSWORD": os.getenv("AUTH_DB_PASSWORD", "postgres"),
-        "HOST": os.getenv("AUTH_DB_HOST", "localhost"),
-        "PORT": os.getenv("AUTH_DB_PORT", "5432"),
-    },
-    "market": {
-        "ENGINE": os.getenv("MARKET_DB_ENGINE", "django.db.backends.postgresql"),
-        "NAME": os.getenv("MARKET_DB_NAME", "market"),
-        "USER": os.getenv("MARKET_DB_USER", "postgres"),
-        "PASSWORD": os.getenv("MARKET_DB_PASSWORD", "postgres"),
-        "HOST": os.getenv("MARKET_DB_HOST", "localhost"),
-        "PORT": os.getenv("MARKET_DB_PORT", "5432"),
-    },
+    "default": dj_database_url.parse(
+        os.getenv("ADMIN_DB_URL", "sqlite:///./admin_panel.sqlite3"),
+        conn_max_age=600,
+    ),
+    "auth": dj_database_url.parse(
+        os.getenv("AUTH_DB_URL", "postgresql://postgres:postgres@localhost:5432/auth"),
+        conn_max_age=600,
+    ),
+    "market": dj_database_url.parse(
+        os.getenv(
+            "MARKET_DB_URL", "postgresql://postgres:postgres@localhost:5432/market"
+        ),
+        conn_max_age=600,
+    ),
 }
 
 DATABASE_ROUTERS = ["core.db_router.KologramDatabaseRouter"]
+
+
+# ===== AUTHENTICATION =====
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -95,12 +107,20 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+
+# ===== INTERNATIONALIZATION =====
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-APP_NAME = os.getenv("APP_NAME", "Kologram")
+# ===== STATIC FILES =====
+
+STATIC_URL = "static/"
+
+
+# ===== DEFAULT PRIMARY KEY =====
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

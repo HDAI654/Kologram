@@ -1,5 +1,6 @@
 """Route Auth models → auth DB, Market models → market DB."""
 
+
 class KologramDatabaseRouter:
 
     auth_models = {"authuser"}
