@@ -1,8 +1,5 @@
 """Route Auth models → auth DB, Market models → market DB."""
 
-from __future__ import annotations
-
-
 class KologramDatabaseRouter:
 
     auth_models = {"authuser"}

@@ -5,13 +5,16 @@ Tables are owned by Auth Service and Market Service.
 This app only provides Django admin CRUD against those tables.
 """
 
-from __future__ import annotations
-
 from django.db import models
 
 # ---------------------------------------------------------------------------
 # AuthDB — users (Auth Service)
 # ---------------------------------------------------------------------------
+
+
+class UserStatus(models.TextChoices):
+    ACTIVE = "ACTIVE"
+    SUSPENDED = "SUSPENDED"
 
 
 class AuthUser(models.Model):
@@ -20,7 +23,12 @@ class AuthUser(models.Model):
     id = models.CharField(max_length=36, primary_key=True)
     email = models.EmailField(max_length=254, unique=True, db_index=True)
     hashed_password = models.CharField(max_length=255)
-    status = models.CharField(max_length=16, default="ACTIVE", db_index=True)
+    status = models.CharField(
+        max_length=16,
+        choices=UserStatus.choices,
+        default=UserStatus.ACTIVE,
+        db_index=True,
+    )
 
     class Meta:
         managed = False
@@ -57,6 +65,20 @@ class Category(models.Model):
     def __str__(self) -> str:
         return self.name
 
+class ListingStatus(models.TextChoices):
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    SOLD = "SOLD"
+    EXPIRED = "EXPIRED"
+    CANCELLED = "CANCELLED"
+    SUSPENDED = "SUSPENDED"
+
+class CurrencyChoices(models.TextChoices):
+    USD = "USD"
+    EUR = "EUR"
+    GBP = "GBP"
+    TRY = "TRY"
+    AED = "AED"
 
 class Listing(models.Model):
     """Maps to Market Service table `listings`."""
@@ -67,9 +89,9 @@ class Listing(models.Model):
     title = models.CharField(max_length=120)
     description = models.TextField(blank=True, default="")
     price_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    currency = models.CharField(max_length=3, default="USD")
+    currency = models.CharField(max_length=3, choices=CurrencyChoices.choices, default="USD")
     quantity = models.IntegerField(default=1)
-    status = models.CharField(max_length=20, db_index=True)
+    status = models.CharField(max_length=20, choices=ListingStatus.choices, db_index=True)
     location = models.CharField(max_length=200)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
@@ -89,7 +111,13 @@ class ListingImage(models.Model):
     """Maps to Market Service table `listing_images`."""
 
     id = models.CharField(max_length=36, primary_key=True)
-    listing_id = models.CharField(max_length=36, db_index=True)
+    listing = models.ForeignKey(
+        Listing,
+        db_column="listing_id",
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        related_name="images",
+    )
     url = models.CharField(max_length=2048)
     sort_order = models.IntegerField(default=0)
 
