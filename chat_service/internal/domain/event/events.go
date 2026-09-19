@@ -16,7 +16,7 @@ type ConversationStarted struct {
 	At             time.Time
 }
 
-func (e ConversationStarted) EventType() string   { return "ConversationStarted" }
+func (e ConversationStarted) EventType() string     { return "ConversationStarted" }
 func (e ConversationStarted) OccurredAt() time.Time { return e.At }
 
 type MessageSent struct {
@@ -27,7 +27,7 @@ type MessageSent struct {
 	At             time.Time
 }
 
-func (e MessageSent) EventType() string   { return "MessageSent" }
+func (e MessageSent) EventType() string     { return "MessageSent" }
 func (e MessageSent) OccurredAt() time.Time { return e.At }
 
 type ConversationStatusChanged struct {
@@ -38,14 +38,5 @@ type ConversationStatusChanged struct {
 	At             time.Time
 }
 
-func (e ConversationStatusChanged) EventType() string   { return "ConversationStatusChanged" }
+func (e ConversationStatusChanged) EventType() string     { return "ConversationStatusChanged" }
 func (e ConversationStatusChanged) OccurredAt() time.Time { return e.At }
-
-type MessagesRead struct {
-	ConversationID string
-	ReaderID       string
-	At             time.Time
-}
-
-func (e MessagesRead) EventType() string   { return "MessagesRead" }
-func (e MessagesRead) OccurredAt() time.Time { return e.At }

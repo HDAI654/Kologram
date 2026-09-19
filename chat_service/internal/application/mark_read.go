@@ -2,9 +2,7 @@ package application
 
 import (
 	"context"
-	"time"
 
-	"github.com/HDAI654/Kologram/chat_service/internal/domain/event"
 	"github.com/HDAI654/Kologram/chat_service/internal/domain/port"
 	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobject"
 )
@@ -20,16 +18,15 @@ type MarkReadResult struct {
 
 type MarkReadHandler struct {
 	uowFactory port.UnitOfWorkFactory
-	events     port.EventPublisher
-	realtime   port.RealtimeNotifier
+
+	realtime port.RealtimeNotifier
 }
 
 func NewMarkReadHandler(
 	uowFactory port.UnitOfWorkFactory,
-	events port.EventPublisher,
 	realtime port.RealtimeNotifier,
 ) *MarkReadHandler {
-	return &MarkReadHandler{uowFactory: uowFactory, events: events, realtime: realtime}
+	return &MarkReadHandler{uowFactory: uowFactory, realtime: realtime}
 }
 
 func (h *MarkReadHandler) Handle(ctx context.Context, cmd MarkReadCommand) (MarkReadResult, error) {
@@ -70,14 +67,6 @@ func (h *MarkReadHandler) Handle(ctx context.Context, cmd MarkReadCommand) (Mark
 		}
 		_ = h.realtime.NotifyUser(ctx, conversation.BuyerID.String(), payload)
 		_ = h.realtime.NotifyUser(ctx, conversation.SellerID.String(), payload)
-	}
-
-	if h.events != nil {
-		_ = h.events.Publish(ctx, event.MessagesRead{
-			ConversationID: conversation.ID.String(),
-			ReaderID:       readerID.String(),
-			At:             time.Now().UTC(),
-		})
 	}
 
 	return MarkReadResult{ConversationID: conversation.ID.String()}, nil
