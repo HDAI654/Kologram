@@ -3,27 +3,27 @@ package domain
 import (
 	"time"
 
-	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobject"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
 // Message is a child entity of the Conversation aggregate.
 type Message struct {
-	ID             valueobject.MessageID
-	ConversationID valueobject.ConversationID
-	SenderID       valueobject.UserID
-	Content        valueobject.MessageContent
+	ID             valueobjects.MessageID
+	ConversationID valueobjects.ConversationID
+	SenderID       valueobjects.UserID
+	Content        valueobjects.MessageContent
 	IsRead         bool
 	SentAt         time.Time
 }
 
 // NewMessage constructs a validated message.
 func NewMessage(
-	conversationID valueobject.ConversationID,
-	senderID valueobject.UserID,
-	content valueobject.MessageContent,
+	conversationID valueobjects.ConversationID,
+	senderID valueobjects.UserID,
+	content valueobjects.MessageContent,
 ) Message {
 	return Message{
-		ID:             valueobject.GenerateMessageID(),
+		ID:             valueobjects.GenerateMessageID(),
 		ConversationID: conversationID,
 		SenderID:       senderID,
 		Content:        content,

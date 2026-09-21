@@ -1,10 +1,10 @@
-package valueobject_test
+package valueobjects_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobject"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
 func TestNewMessageContent_Valid(t *testing.T) {
@@ -36,7 +36,7 @@ func TestNewMessageContent_Valid(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			c, err := valueobject.NewMessageContent(tc.input)
+			c, err := valueobjects.NewMessageContent(tc.input)
 			if err != nil {
 				t.Fatalf("NewMessageContent(%q): unexpected error: %v", tc.input, err)
 			}
@@ -69,7 +69,7 @@ func TestNewMessageContent_Invalid(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			if _, err := valueobject.NewMessageContent(tc.input); err == nil {
+			if _, err := valueobjects.NewMessageContent(tc.input); err == nil {
 				t.Fatalf("NewMessageContent(%q): expected error, got nil", tc.input)
 			}
 		})
@@ -79,7 +79,7 @@ func TestNewMessageContent_Invalid(t *testing.T) {
 func TestNewMessageContent_TrimmingContract(t *testing.T) {
 	t.Parallel()
 
-	c, err := valueobject.NewMessageContent("  hello  ")
+	c, err := valueobjects.NewMessageContent("  hello  ")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -1,11 +1,11 @@
-package valueobject_test
+package valueobjects_test
 
 import (
 	"testing"
 
 	"github.com/google/uuid"
 
-	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobject"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
 type idConstructor struct {
@@ -18,7 +18,7 @@ func idConstructors() []idConstructor {
 		{
 			name: "ConversationID",
 			new: func(s string) (string, error) {
-				v, err := valueobject.NewConversationID(s)
+				v, err := valueobjects.NewConversationID(s)
 				if err != nil {
 					return "", err
 				}
@@ -28,7 +28,7 @@ func idConstructors() []idConstructor {
 		{
 			name: "MessageID",
 			new: func(s string) (string, error) {
-				v, err := valueobject.NewMessageID(s)
+				v, err := valueobjects.NewMessageID(s)
 				if err != nil {
 					return "", err
 				}
@@ -38,7 +38,7 @@ func idConstructors() []idConstructor {
 		{
 			name: "UserID",
 			new: func(s string) (string, error) {
-				v, err := valueobject.NewUserID(s)
+				v, err := valueobjects.NewUserID(s)
 				if err != nil {
 					return "", err
 				}
@@ -48,7 +48,7 @@ func idConstructors() []idConstructor {
 		{
 			name: "ListingID",
 			new: func(s string) (string, error) {
-				v, err := valueobject.NewListingID(s)
+				v, err := valueobjects.NewListingID(s)
 				if err != nil {
 					return "", err
 				}
@@ -123,7 +123,7 @@ func TestIDConstructors_Invalid(t *testing.T) {
 func TestGenerateConversationID(t *testing.T) {
 	t.Parallel()
 
-	id := valueobject.GenerateConversationID()
+	id := valueobjects.GenerateConversationID()
 	parsed, err := uuid.Parse(id.String())
 	if err != nil {
 		t.Fatalf("GenerateConversationID produced unparseable id: %v", err)
@@ -132,7 +132,7 @@ func TestGenerateConversationID(t *testing.T) {
 		t.Fatalf("version = %d, want 4", parsed.Version())
 	}
 
-	other := valueobject.GenerateConversationID()
+	other := valueobjects.GenerateConversationID()
 	if id.String() == other.String() {
 		t.Fatalf("two consecutive calls returned identical id: %s", id.String())
 	}
@@ -141,7 +141,7 @@ func TestGenerateConversationID(t *testing.T) {
 func TestGenerateMessageID(t *testing.T) {
 	t.Parallel()
 
-	id := valueobject.GenerateMessageID()
+	id := valueobjects.GenerateMessageID()
 	parsed, err := uuid.Parse(id.String())
 	if err != nil {
 		t.Fatalf("GenerateMessageID produced unparseable id: %v", err)
@@ -150,7 +150,7 @@ func TestGenerateMessageID(t *testing.T) {
 		t.Fatalf("version = %d, want 4", parsed.Version())
 	}
 
-	other := valueobject.GenerateMessageID()
+	other := valueobjects.GenerateMessageID()
 	if id.String() == other.String() {
 		t.Fatalf("two consecutive calls returned identical id: %s", id.String())
 	}
@@ -161,11 +161,11 @@ func TestUserID_Equals(t *testing.T) {
 
 	const raw = "3bb6a3ca-66dc-440e-8d11-d8cca7ad7792"
 
-	a, err := valueobject.NewUserID(raw)
+	a, err := valueobjects.NewUserID(raw)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	b, err := valueobject.NewUserID(raw)
+	b, err := valueobjects.NewUserID(raw)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestUserID_Equals(t *testing.T) {
 		t.Fatalf("Equals returned false for identical values")
 	}
 
-	c, err := valueobject.NewUserID("a8098c1a-f86e-41da-bd1a-00112444be1e")
+	c, err := valueobjects.NewUserID("a8098c1a-f86e-41da-bd1a-00112444be1e")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

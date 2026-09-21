@@ -5,16 +5,16 @@ import (
 
 	domainerrors "github.com/HDAI654/Kologram/chat_service/internal/domain/errors"
 
-	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobject"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
 // Conversation is the aggregate root for buyer–seller messaging about a listing.
 type Conversation struct {
-	ID        valueobject.ConversationID
-	BuyerID   valueobject.UserID
-	SellerID  valueobject.UserID
-	ListingID valueobject.ListingID
-	Status    valueobject.ConversationStatus
+	ID        valueobjects.ConversationID
+	BuyerID   valueobjects.UserID
+	SellerID  valueobjects.UserID
+	ListingID valueobjects.ListingID
+	Status    valueobjects.ConversationStatus
 	Messages  []Message
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -22,32 +22,32 @@ type Conversation struct {
 
 // StartConversation creates a new OPEN conversation between buyer and seller.
 func StartConversation(
-	buyerID valueobject.UserID,
-	sellerID valueobject.UserID,
-	listingID valueobject.ListingID,
+	buyerID valueobjects.UserID,
+	sellerID valueobjects.UserID,
+	listingID valueobjects.ListingID,
 ) (*Conversation, error) {
 	if buyerID.Equals(sellerID) {
 		return nil, domainerrors.ErrBuyerSellerSame
 	}
 	now := time.Now().UTC()
 	return &Conversation{
-		ID:        valueobject.GenerateConversationID(),
+		ID:        valueobjects.GenerateConversationID(),
 		BuyerID:   buyerID,
 		SellerID:  sellerID,
 		ListingID: listingID,
-		Status:    valueobject.StatusOpen,
+		Status:    valueobjects.StatusOpen,
 		Messages:  nil,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}, nil
 }
 
-func (c *Conversation) IsParticipant(userID valueobject.UserID) bool {
+func (c *Conversation) IsParticipant(userID valueobjects.UserID) bool {
 	return c.BuyerID.Equals(userID) || c.SellerID.Equals(userID)
 }
 
 // AddMessage appends a message if the sender is a participant and conversation is open.
-func (c *Conversation) AddMessage(senderID valueobject.UserID, content valueobject.MessageContent) (Message, error) {
+func (c *Conversation) AddMessage(senderID valueobjects.UserID, content valueobjects.MessageContent) (Message, error) {
 	if !c.IsParticipant(senderID) {
 		return Message{}, domainerrors.ErrNotParticipant
 	}
@@ -61,7 +61,7 @@ func (c *Conversation) AddMessage(senderID valueobject.UserID, content valueobje
 }
 
 // TransitionStatus applies an allowed lifecycle transition.
-func (c *Conversation) TransitionStatus(target valueobject.ConversationStatus, actorID valueobject.UserID) error {
+func (c *Conversation) TransitionStatus(target valueobjects.ConversationStatus, actorID valueobjects.UserID) error {
 	if !c.IsParticipant(actorID) {
 		return domainerrors.ErrNotParticipant
 	}

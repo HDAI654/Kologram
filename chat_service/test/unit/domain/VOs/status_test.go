@@ -1,9 +1,9 @@
-package valueobject_test
+package valueobjects_test
 
 import (
 	"testing"
 
-	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobject"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
 func TestNewConversationStatus_Valid(t *testing.T) {
@@ -27,7 +27,7 @@ func TestNewConversationStatus_Valid(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			s, err := valueobject.NewConversationStatus(tc.input)
+			s, err := valueobjects.NewConversationStatus(tc.input)
 			if err != nil {
 				t.Fatalf("NewConversationStatus(%q): unexpected error: %v", tc.input, err)
 			}
@@ -58,7 +58,7 @@ func TestNewConversationStatus_Invalid(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			if _, err := valueobject.NewConversationStatus(tc.input); err == nil {
+			if _, err := valueobjects.NewConversationStatus(tc.input); err == nil {
 				t.Fatalf("expected error for %q, got nil", tc.input)
 			}
 		})
@@ -68,13 +68,13 @@ func TestNewConversationStatus_Invalid(t *testing.T) {
 func TestConversationStatus_Equals(t *testing.T) {
 	t.Parallel()
 
-	if !valueobject.StatusOpen.Equals(valueobject.StatusOpen) {
+	if !valueobjects.StatusOpen.Equals(valueobjects.StatusOpen) {
 		t.Fatalf("StatusOpen.Equals(StatusOpen) = false, want true")
 	}
-	if valueobject.StatusOpen.Equals(valueobject.StatusClosed) {
+	if valueobjects.StatusOpen.Equals(valueobjects.StatusClosed) {
 		t.Fatalf("StatusOpen.Equals(StatusClosed) = true, want false")
 	}
-	if valueobject.StatusClosed.Equals(valueobject.StatusArchived) {
+	if valueobjects.StatusClosed.Equals(valueobjects.StatusArchived) {
 		t.Fatalf("StatusClosed.Equals(StatusArchived) = true, want false")
 	}
 }
@@ -84,21 +84,21 @@ func TestConversationStatus_CanTransitionTo(t *testing.T) {
 
 	cases := []struct {
 		name string
-		from valueobject.ConversationStatus
-		to   valueobject.ConversationStatus
+		from valueobjects.ConversationStatus
+		to   valueobjects.ConversationStatus
 		want bool
 	}{
-		{"open to open", valueobject.StatusOpen, valueobject.StatusOpen, false},
-		{"open to closed", valueobject.StatusOpen, valueobject.StatusClosed, true},
-		{"open to archived", valueobject.StatusOpen, valueobject.StatusArchived, true},
+		{"open to open", valueobjects.StatusOpen, valueobjects.StatusOpen, false},
+		{"open to closed", valueobjects.StatusOpen, valueobjects.StatusClosed, true},
+		{"open to archived", valueobjects.StatusOpen, valueobjects.StatusArchived, true},
 
-		{"closed to open", valueobject.StatusClosed, valueobject.StatusOpen, true},
-		{"closed to closed", valueobject.StatusClosed, valueobject.StatusClosed, false},
-		{"closed to archived", valueobject.StatusClosed, valueobject.StatusArchived, true},
+		{"closed to open", valueobjects.StatusClosed, valueobjects.StatusOpen, true},
+		{"closed to closed", valueobjects.StatusClosed, valueobjects.StatusClosed, false},
+		{"closed to archived", valueobjects.StatusClosed, valueobjects.StatusArchived, true},
 
-		{"archived to open", valueobject.StatusArchived, valueobject.StatusOpen, false},
-		{"archived to closed", valueobject.StatusArchived, valueobject.StatusClosed, false},
-		{"archived to archived", valueobject.StatusArchived, valueobject.StatusArchived, false},
+		{"archived to open", valueobjects.StatusArchived, valueobjects.StatusOpen, false},
+		{"archived to closed", valueobjects.StatusArchived, valueobjects.StatusClosed, false},
+		{"archived to archived", valueobjects.StatusArchived, valueobjects.StatusArchived, false},
 	}
 
 	for _, tc := range cases {
@@ -119,12 +119,12 @@ func TestConversationStatus_AllowsMessages(t *testing.T) {
 
 	cases := []struct {
 		name   string
-		status valueobject.ConversationStatus
+		status valueobjects.ConversationStatus
 		want   bool
 	}{
-		{"open allows messages", valueobject.StatusOpen, true},
-		{"closed rejects messages", valueobject.StatusClosed, false},
-		{"archived rejects messages", valueobject.StatusArchived, false},
+		{"open allows messages", valueobjects.StatusOpen, true},
+		{"closed rejects messages", valueobjects.StatusClosed, false},
+		{"archived rejects messages", valueobjects.StatusArchived, false},
 	}
 
 	for _, tc := range cases {
