@@ -23,5 +23,5 @@ type ConversationRepository interface {
 		ctx context.Context,
 		userID valueobjects.UserID,
 		limit, offset int,
-	) ([]*entities.Conversation, error)
+	) ([]*entities.Conversation, int32, error)
 }
