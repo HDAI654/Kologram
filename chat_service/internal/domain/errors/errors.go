@@ -1,4 +1,4 @@
-package domain
+package domainerrors
 
 import (
 	"errors"
@@ -40,7 +40,14 @@ func (e *ValidationError) Unwrap() error {
 	return ErrInvalidArgument
 }
 
-// NewValidationError constructs a field-scoped validation error.
-func NewValidationError(field, message string) error {
-	return &ValidationError{Field: field, Message: message}
-}
+// ---------------------------------------------------------------------------
+// Specific domain rules — each wraps its category.
+// ---------------------------------------------------------------------------
+
+var (
+	// ErrBuyerSellerSame is a cross-field rule: buyer and seller must differ.
+	ErrBuyerSellerSame = fmt.Errorf(
+		"buyer and seller must be different: %w",
+		ErrInvalidArgument,
+	)
+)

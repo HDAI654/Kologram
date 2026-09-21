@@ -3,6 +3,8 @@ package valueobject
 import (
 	"fmt"
 	"strings"
+
+	domainerrors "github.com/HDAI654/Kologram/chat_service/internal/domain/errors"
 )
 
 // ConversationStatus is the lifecycle state of a conversation.
@@ -33,7 +35,10 @@ func NewConversationStatus(raw string) (ConversationStatus, error) {
 	normalized := strings.ToUpper(strings.TrimSpace(raw))
 	status, ok := allowedStatuses[normalized]
 	if !ok {
-		return ConversationStatus{}, fmt.Errorf("invalid conversation status: %s", raw)
+		return ConversationStatus{}, &domainerrors.ValidationError{
+			Field:   "conversation_status",
+			Message: fmt.Sprintf("invalid conversation status: %s", raw),
+		}
 	}
 	return status, nil
 }
