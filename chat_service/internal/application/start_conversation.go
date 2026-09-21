@@ -23,20 +23,20 @@ type StartConversationResult struct {
 }
 
 type StartConversationHandler struct {
-	uowFactory   ports.UnitOfWorkFactory
-	listing_repo ports.ListingRepository
-	events       ports.EventPublisher
+	uowFactory  ports.UnitOfWorkFactory
+	listingRepo ports.ListingRepository
+	events      ports.EventPublisher
 }
 
 func NewStartConversationHandler(
 	uowFactory ports.UnitOfWorkFactory,
-	listing_repo ports.ListingRepository,
+	listingRepo ports.ListingRepository,
 	events ports.EventPublisher,
 ) *StartConversationHandler {
 	return &StartConversationHandler{
-		uowFactory:   uowFactory,
-		listing_repo: listing_repo,
-		events:       events,
+		uowFactory:  uowFactory,
+		listingRepo: listingRepo,
+		events:      events,
 	}
 }
 
@@ -52,6 +52,27 @@ func (h *StartConversationHandler) Handle(
 	listingID, err := valueobjects.NewListingID(cmd.ListingID)
 	if err != nil {
 		return StartConversationResult{}, err
+	}
+
+	// Seller is derived from the listing, not the request.
+	listing, err := h.listingRepo.GetByID(ctx, listingID)
+	if err != nil {
+		return StartConversationResult{}, err
+	}
+	if listing == nil {
+		return StartConversationResult{}, &domainerrors.NotFoundError{
+			Field:   "listing_id",
+			Message: "listing " + listingID.String() + " not found",
+		}
+	}
+
+	// Buyer cannot start a conversation with themselves.
+	if buyerID.Equals(listing.SellerID) {
+		return StartConversationResult{}, domainerrors.ErrBuyerSellerSame
+	}
+
+	if !listing.MessageAllowed {
+		return StartConversationResult{}, domainerrors.ErrListingNotMessageable
 	}
 
 	uow, err := h.uowFactory.New(ctx)
@@ -73,27 +94,6 @@ func (h *StartConversationHandler) Handle(
 			Status:         existing.Status.String(),
 			Created:        false,
 		}, nil
-	}
-
-	// Seller is derived from the listing, not the request.
-	listing, err := h.listing_repo.GetByID(listingID)
-	if err != nil {
-		return StartConversationResult{}, err
-	}
-	if listing == nil {
-		return StartConversationResult{}, &domainerrors.NotFoundError{
-			Field:   "listing_id",
-			Message: "listing " + listingID.String() + " not found",
-		}
-	}
-
-	// Buyer cannot start a conversation with themselves.
-	if buyerID.Equals(listing.SellerID) {
-		return StartConversationResult{}, domainerrors.ErrBuyerSellerSame
-	}
-
-	if !listing.MessageAllowed {
-		return StartConversationResult{}, domainerrors.ErrListingNotMessageable
 	}
 
 	conversation, err := entities.StartConversation(buyerID, listing.SellerID, listingID)

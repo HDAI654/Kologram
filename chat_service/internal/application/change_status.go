@@ -54,6 +54,8 @@ func (h *ChangeStatusHandler) Handle(
 	if err != nil {
 		return ChangeStatusResult{}, err
 	}
+
+	// No-op after a successful commit; rolls back on any other exit.
 	defer func() { _ = uow.Rollback(ctx) }()
 
 	conversation, err := uow.Conversations().GetByID(ctx, conversationID)

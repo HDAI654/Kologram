@@ -10,6 +10,7 @@ import (
 // ConversationRepository loads and saves conversation aggregates.
 type ConversationRepository interface {
 	Add(ctx context.Context, conversation *entities.Conversation) error
+	Delete(ctx context.Context, conversation_id valueobjects.ConversationID) error
 	GetByID(ctx context.Context, id valueobjects.ConversationID) (*entities.Conversation, error)
 	Update(ctx context.Context, conversation *entities.Conversation) error
 	AddMessage(ctx context.Context, conversation_id valueobjects.ConversationID, message *entities.Message) error
