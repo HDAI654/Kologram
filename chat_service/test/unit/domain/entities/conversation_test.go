@@ -17,9 +17,9 @@ import (
 func TestStartConversation_PopulatesAllFields(t *testing.T) {
 	t.Parallel()
 
-	buyer := mustUserID(t, fixedBuyerID)
-	seller := mustUserID(t, fixedSellerID)
-	listing := mustListingID(t, fixedListingID)
+	buyer := FixedBuyerID
+	seller := FixedSellerID
+	listing := FixedListingID
 
 	before := time.Now().UTC()
 	conv, err := domain.StartConversation(buyer, seller, listing)
@@ -60,8 +60,8 @@ func TestStartConversation_PopulatesAllFields(t *testing.T) {
 func TestStartConversation_RejectsSameBuyerAndSeller(t *testing.T) {
 	t.Parallel()
 
-	same := mustUserID(t, fixedBuyerID)
-	listing := mustListingID(t, fixedListingID)
+	same := FixedBuyerID
+	listing := FixedListingID
 
 	conv, err := domain.StartConversation(same, same, listing)
 
@@ -76,9 +76,9 @@ func TestStartConversation_RejectsSameBuyerAndSeller(t *testing.T) {
 func TestStartConversation_GeneratesUniqueIDs(t *testing.T) {
 	t.Parallel()
 
-	buyer := mustUserID(t, fixedBuyerID)
-	seller := mustUserID(t, fixedSellerID)
-	listing := mustListingID(t, fixedListingID)
+	buyer := FixedBuyerID
+	seller := FixedSellerID
+	listing := FixedListingID
 
 	a, err := domain.StartConversation(buyer, seller, listing)
 	if err != nil {
@@ -108,9 +108,9 @@ func TestConversation_IsParticipant(t *testing.T) {
 		id   valueobjects.UserID
 		want bool
 	}{
-		{"buyer is participant", mustUserID(t, fixedBuyerID), true},
-		{"seller is participant", mustUserID(t, fixedSellerID), true},
-		{"third party is not", mustUserID(t, fixedThirdPartyID), false},
+		{"buyer is participant", conv.BuyerID, true},
+		{"seller is participant", conv.SellerID, true},
+		{"third party is not", FixedThirdPartyID, false},
 	}
 
 	for _, tc := range cases {
@@ -131,7 +131,7 @@ func TestConversation_AddMessage_BuyerCanSend(t *testing.T) {
 	t.Parallel()
 
 	conv := newOpenConversation(t)
-	buyer := mustUserID(t, fixedBuyerID)
+	buyer := conv.BuyerID
 	content := mustContent(t, "hello seller")
 
 	before := time.Now().UTC()
@@ -166,7 +166,7 @@ func TestConversation_AddMessage_SellerCanSend(t *testing.T) {
 	t.Parallel()
 
 	conv := newOpenConversation(t)
-	seller := mustUserID(t, fixedSellerID)
+	seller := conv.SellerID
 
 	msg, err := conv.AddMessage(seller, mustContent(t, "hello buyer"))
 	if err != nil {
@@ -187,7 +187,7 @@ func TestConversation_AddMessage_AdvancesUpdatedAt(t *testing.T) {
 	originalUpdatedAt := conv.UpdatedAt
 	time.Sleep(time.Millisecond)
 
-	if _, err := conv.AddMessage(mustUserID(t, fixedBuyerID), mustContent(t, "hi")); err != nil {
+	if _, err := conv.AddMessage(FixedBuyerID, mustContent(t, "hi")); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -200,7 +200,7 @@ func TestConversation_AddMessage_RejectsNonParticipant(t *testing.T) {
 	t.Parallel()
 
 	conv := newOpenConversation(t)
-	third := mustUserID(t, fixedThirdPartyID)
+	third := FixedThirdPartyID
 
 	msg, err := conv.AddMessage(third, mustContent(t, "hi"))
 
@@ -233,7 +233,7 @@ func TestConversation_AddMessage_RejectsWhenNotOpen(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			conv := newConversationInStatus(t, tc.status)
-			buyer := mustUserID(t, fixedBuyerID)
+			buyer := conv.BuyerID
 
 			msg, err := conv.AddMessage(buyer, mustContent(t, "hi"))
 
@@ -292,7 +292,7 @@ func TestConversation_TransitionStatus_Matrix(t *testing.T) {
 			} else {
 				conv = newConversationInStatus(t, c.from)
 			}
-			actor := mustUserID(t, fixedBuyerID)
+			actor := conv.BuyerID
 
 			err := conv.TransitionStatus(c.to, actor)
 
@@ -321,7 +321,7 @@ func TestConversation_TransitionStatus_RejectsNonParticipant(t *testing.T) {
 	t.Parallel()
 
 	conv := newOpenConversation(t)
-	third := mustUserID(t, fixedThirdPartyID)
+	third := FixedThirdPartyID
 
 	err := conv.TransitionStatus(valueobjects.StatusClosed, third)
 
@@ -340,7 +340,7 @@ func TestConversation_TransitionStatus_AdvancesUpdatedAtOnSuccess(t *testing.T) 
 	t.Parallel()
 
 	conv := newOpenConversation(t)
-	actor := mustUserID(t, fixedBuyerID)
+	actor := conv.BuyerID
 
 	original := conv.UpdatedAt
 	time.Sleep(time.Millisecond)
@@ -358,7 +358,7 @@ func TestConversation_TransitionStatus_LeavesUpdatedAtOnFailure(t *testing.T) {
 	t.Parallel()
 
 	conv := newConversationInStatus(t, valueobjects.StatusArchived)
-	actor := mustUserID(t, fixedBuyerID)
+	actor := conv.BuyerID
 
 	original := conv.UpdatedAt
 	time.Sleep(time.Millisecond)
