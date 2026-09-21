@@ -92,6 +92,10 @@ func (h *StartConversationHandler) Handle(
 		return StartConversationResult{}, domainerrors.ErrBuyerSellerSame
 	}
 
+	if !listing.MessageAllowed {
+		return StartConversationResult{}, domainerrors.ErrListingNotMessageable
+	}
+
 	conversation, err := entities.StartConversation(buyerID, listing.SellerID, listingID)
 	if err != nil {
 		return StartConversationResult{}, err

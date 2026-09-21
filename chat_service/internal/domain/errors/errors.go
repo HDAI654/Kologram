@@ -94,4 +94,10 @@ var (
 		"invalid conversation status transition: %w",
 		ErrConflict,
 	)
+
+	// ErrListingNotMessageable is returned when a listing does not allow new conversations.
+	ErrListingNotMessageable = fmt.Errorf(
+		"listing does not allow new conversations: %w",
+		ErrConflict,
+	)
 )
