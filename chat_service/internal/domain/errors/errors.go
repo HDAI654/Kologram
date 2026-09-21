@@ -17,6 +17,9 @@ var (
 
 	// ErrConflict indicates a domain state conflict.
 	ErrConflict = errors.New("conflict")
+
+	// ErrForbidden indicates the caller is not permitted to perform the action.
+	ErrForbidden = errors.New("forbidden")
 )
 
 // ---------------------------------------------------------------------------
@@ -49,5 +52,25 @@ var (
 	ErrBuyerSellerSame = fmt.Errorf(
 		"buyer and seller must be different: %w",
 		ErrInvalidArgument,
+	)
+
+	// ErrNotParticipant is returned when the caller is not a party to the conversation.
+	ErrNotParticipant = fmt.Errorf(
+		"user is not a participant of this conversation: %w",
+		ErrForbidden,
+	)
+
+	// ErrConversationNotOpen is returned when a message is sent to
+	// a conversation whose status does not allow new messages.
+	ErrConversationNotOpen = fmt.Errorf(
+		"conversation is not open for new messages: %w",
+		ErrConflict,
+	)
+
+	// ErrInvalidStatusTransition is returned when the requested status change is
+	// not permitted from the conversation's current status.
+	ErrInvalidStatusTransition = fmt.Errorf(
+		"invalid conversation status transition: %w",
+		ErrConflict,
 	)
 )
