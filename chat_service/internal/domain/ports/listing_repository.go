@@ -7,5 +7,5 @@ import (
 
 // ListingRepository check existence of listing by requesting market service
 type ListingRepository interface {
-	GetByID(listing_id valueobjects.ListingID) (entities.Listing, error)
+	GetByID(listing_id valueobjects.ListingID) (*entities.Listing, error)
 }

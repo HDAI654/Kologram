@@ -44,6 +44,27 @@ func (e *ValidationError) Unwrap() error {
 }
 
 // ---------------------------------------------------------------------------
+// Typed not found errors (entities)
+// ---------------------------------------------------------------------------
+
+// NotFoundError is raised when a requested entity does not exist.
+type NotFoundError struct {
+	Field   string
+	Message string
+}
+
+func (e *NotFoundError) Error() string {
+	if e.Field == "" {
+		return e.Message
+	}
+	return fmt.Sprintf("%s: %s", e.Field, e.Message)
+}
+
+func (e *NotFoundError) Unwrap() error {
+	return ErrNotFound
+}
+
+// ---------------------------------------------------------------------------
 // Specific domain rules — each wraps its category.
 // ---------------------------------------------------------------------------
 
