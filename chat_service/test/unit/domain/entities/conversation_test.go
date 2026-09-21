@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	domain "github.com/HDAI654/Kologram/chat_service/internal/domain/entities"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/entities"
 	domainerrors "github.com/HDAI654/Kologram/chat_service/internal/domain/errors"
 	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
@@ -22,7 +22,7 @@ func TestStartConversation_PopulatesAllFields(t *testing.T) {
 	listing := FixedListingID
 
 	before := time.Now().UTC()
-	conv, err := domain.StartConversation(buyer, seller, listing)
+	conv, err := entities.StartConversation(buyer, seller, listing)
 	after := time.Now().UTC()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -63,7 +63,7 @@ func TestStartConversation_RejectsSameBuyerAndSeller(t *testing.T) {
 	same := FixedBuyerID
 	listing := FixedListingID
 
-	conv, err := domain.StartConversation(same, same, listing)
+	conv, err := entities.StartConversation(same, same, listing)
 
 	if !errors.Is(err, domainerrors.ErrBuyerSellerSame) {
 		t.Fatalf("err = %v, want ErrBuyerSellerSame", err)
@@ -80,11 +80,11 @@ func TestStartConversation_GeneratesUniqueIDs(t *testing.T) {
 	seller := FixedSellerID
 	listing := FixedListingID
 
-	a, err := domain.StartConversation(buyer, seller, listing)
+	a, err := entities.StartConversation(buyer, seller, listing)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	b, err := domain.StartConversation(buyer, seller, listing)
+	b, err := entities.StartConversation(buyer, seller, listing)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -210,7 +210,7 @@ func TestConversation_AddMessage_RejectsNonParticipant(t *testing.T) {
 	if !errors.Is(err, domainerrors.ErrForbidden) {
 		t.Fatalf("err = %v, want category ErrForbidden", err)
 	}
-	if msg != (domain.Message{}) {
+	if msg != (entities.Message{}) {
 		t.Fatalf("returned message should be zero value on error, got %+v", msg)
 	}
 	if len(conv.Messages) != 0 {
@@ -243,7 +243,7 @@ func TestConversation_AddMessage_RejectsWhenNotOpen(t *testing.T) {
 			if !errors.Is(err, domainerrors.ErrConflict) {
 				t.Fatalf("err = %v, want category ErrConflict", err)
 			}
-			if msg != (domain.Message{}) {
+			if msg != (entities.Message{}) {
 				t.Fatalf("returned message should be zero value on error")
 			}
 			if len(conv.Messages) != 0 {
@@ -286,7 +286,7 @@ func TestConversation_TransitionStatus_Matrix(t *testing.T) {
 			t.Parallel()
 
 			// Drive to source status. Starting from OPEN, then transitioning.
-			var conv *domain.Conversation
+			var conv *entities.Conversation
 			if c.from.Equals(valueobjects.StatusOpen) {
 				conv = newOpenConversation(t)
 			} else {

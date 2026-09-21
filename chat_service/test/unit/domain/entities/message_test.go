@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	domain "github.com/HDAI654/Kologram/chat_service/internal/domain/entities"
+	"github.com/HDAI654/Kologram/chat_service/internal/domain/entities"
 )
 
 func TestNewMessage_PopulatesAllFields(t *testing.T) {
@@ -16,7 +16,7 @@ func TestNewMessage_PopulatesAllFields(t *testing.T) {
 	content := mustContent(t, "hello world")
 
 	before := time.Now().UTC()
-	msg := domain.NewMessage(convID, senderID, content)
+	msg := entities.NewMessage(convID, senderID, content)
 	after := time.Now().UTC()
 
 	if msg.ID.String() == "" {
@@ -47,8 +47,8 @@ func TestNewMessage_GeneratesUniqueIDs(t *testing.T) {
 	senderID := conv.BuyerID
 	content := mustContent(t, "hello world")
 
-	a := domain.NewMessage(convID, senderID, content)
-	b := domain.NewMessage(convID, senderID, content)
+	a := entities.NewMessage(convID, senderID, content)
+	b := entities.NewMessage(convID, senderID, content)
 
 	if a.ID.String() == b.ID.String() {
 		t.Fatalf("two calls returned same MessageID: %s", a.ID.String())
@@ -63,8 +63,8 @@ func TestNewMessage_DoesNotShareMutableState(t *testing.T) {
 	senderID := conv.BuyerID
 	content := mustContent(t, "hello world")
 
-	a := domain.NewMessage(convID, senderID, content)
-	b := domain.NewMessage(convID, senderID, content)
+	a := entities.NewMessage(convID, senderID, content)
+	b := entities.NewMessage(convID, senderID, content)
 
 	a.MarkRead()
 
@@ -81,7 +81,7 @@ func TestMessage_MarkRead(t *testing.T) {
 	senderID := conv.BuyerID
 	content := mustContent(t, "hello world")
 
-	msg := domain.NewMessage(
+	msg := entities.NewMessage(
 		convID,
 		senderID,
 		content,
