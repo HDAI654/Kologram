@@ -19,6 +19,9 @@ type ConversationRepository interface {
 		buyerID valueobjects.UserID,
 		listingID valueobjects.ListingID,
 	) (*entities.Conversation, error)
+
+	// ListForUser returns the user's conversations, each with only its most
+	// recent message populated, plus the total conversation count for pagination.
 	ListForUser(
 		ctx context.Context,
 		userID valueobjects.UserID,

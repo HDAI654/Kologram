@@ -30,11 +30,11 @@ type ListConversationsResult struct {
 }
 
 type ListConversationsHandler struct {
-	uowFactory ports.UnitOfWorkFactory
+	conversations ports.ConversationRepository
 }
 
-func NewListConversationsHandler(uowFactory ports.UnitOfWorkFactory) *ListConversationsHandler {
-	return &ListConversationsHandler{uowFactory: uowFactory}
+func NewListConversationsHandler(conversations ports.ConversationRepository) *ListConversationsHandler {
+	return &ListConversationsHandler{conversations: conversations}
 }
 
 func (h *ListConversationsHandler) Handle(
@@ -54,15 +54,7 @@ func (h *ListConversationsHandler) Handle(
 		offset = 0
 	}
 
-	uow, err := h.uowFactory.New(ctx)
-	if err != nil {
-		return ListConversationsResult{}, err
-	}
-
-	// No-op after a successful commit; rolls back on any other exit.
-	defer func() { _ = uow.Rollback(ctx) }()
-
-	conversations, total, err := uow.Conversations().ListForUser(ctx, userID, limit, offset)
+	conversations, total, err := h.conversations.ListForUser(ctx, userID, limit, offset)
 	if err != nil {
 		return ListConversationsResult{}, err
 	}
@@ -71,7 +63,7 @@ func (h *ListConversationsHandler) Handle(
 	for _, c := range conversations {
 		last := ""
 		if n := len(c.Messages); n > 0 {
-			last = c.Messages[n-1].Content.String()
+			last = c.Messages[0].Content.String()
 		}
 		items = append(items, ConversationItem{
 			ConversationID: c.ID.String(),
