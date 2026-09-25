@@ -5,6 +5,7 @@ import "context"
 // UnitOfWork coordinates repository access and transactional boundaries.
 type UnitOfWork interface {
 	Conversations() ConversationRepository
+	Messages() MessageRepository
 	Commit(ctx context.Context) error
 	Rollback(ctx context.Context) error
 }
