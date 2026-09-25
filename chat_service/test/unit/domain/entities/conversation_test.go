@@ -46,14 +46,27 @@ func TestStartConversation_PopulatesAllFields(t *testing.T) {
 	if !conv.Status.Equals(valueobjects.StatusOpen) {
 		t.Fatalf("Status = %s, want OPEN", conv.Status.String())
 	}
-	if conv.Messages != nil {
-		t.Fatalf("Messages = %v, want nil", conv.Messages)
-	}
 	if conv.CreatedAt.Before(before) || conv.CreatedAt.After(after) {
 		t.Fatalf("CreatedAt = %v, want within [%v, %v]", conv.CreatedAt, before, after)
 	}
 	if !conv.CreatedAt.Equal(conv.UpdatedAt) {
 		t.Fatalf("CreatedAt != UpdatedAt on fresh conversation")
+	}
+}
+
+func TestStartConversation_LeavesPreviewEmpty(t *testing.T) {
+	t.Parallel()
+
+	conv, err := entities.StartConversation(FixedBuyerID, FixedSellerID, FixedListingID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if conv.LastMessagePreview != "" {
+		t.Fatalf("LastMessagePreview = %q, want empty on fresh conversation", conv.LastMessagePreview)
+	}
+	if !conv.LastMessageAt.IsZero() {
+		t.Fatalf("LastMessageAt = %v, want zero on fresh conversation", conv.LastMessageAt)
 	}
 }
 
@@ -68,6 +81,9 @@ func TestStartConversation_RejectsSameBuyerAndSeller(t *testing.T) {
 	if !errors.Is(err, domainerrors.ErrBuyerSellerSame) {
 		t.Fatalf("err = %v, want ErrBuyerSellerSame", err)
 	}
+	if !errors.Is(err, domainerrors.ErrInvalidArgument) {
+		t.Fatalf("err = %v, want category ErrInvalidArgument", err)
+	}
 	if conv != nil {
 		t.Fatalf("conversation = %v, want nil", conv)
 	}
@@ -76,15 +92,11 @@ func TestStartConversation_RejectsSameBuyerAndSeller(t *testing.T) {
 func TestStartConversation_GeneratesUniqueIDs(t *testing.T) {
 	t.Parallel()
 
-	buyer := FixedBuyerID
-	seller := FixedSellerID
-	listing := FixedListingID
-
-	a, err := entities.StartConversation(buyer, seller, listing)
+	a, err := entities.StartConversation(FixedBuyerID, FixedSellerID, FixedListingID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	b, err := entities.StartConversation(buyer, seller, listing)
+	b, err := entities.StartConversation(FixedBuyerID, FixedSellerID, FixedListingID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -114,6 +126,7 @@ func TestConversation_IsParticipant(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if got := conv.IsParticipant(tc.id); got != tc.want {
@@ -124,132 +137,73 @@ func TestConversation_IsParticipant(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AddMessage
+// RecordLastMessage
 // ---------------------------------------------------------------------------
 
-func TestConversation_AddMessage_BuyerCanSend(t *testing.T) {
+func TestConversation_RecordLastMessage_SetsPreviewAndTimestamp(t *testing.T) {
 	t.Parallel()
 
 	conv := newOpenConversation(t)
-	buyer := conv.BuyerID
-	content := mustContent(t, "hello seller")
+	content := mustContent(t, "hello there")
 
 	before := time.Now().UTC()
-	msg, err := conv.AddMessage(buyer, content)
+	conv.RecordLastMessage(content)
 	after := time.Now().UTC()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
 
-	if len(conv.Messages) != 1 {
-		t.Fatalf("Messages len = %d, want 1", len(conv.Messages))
+	if conv.LastMessagePreview != "hello there" {
+		t.Fatalf("LastMessagePreview = %q, want %q", conv.LastMessagePreview, "hello there")
 	}
-	stored := conv.Messages[0]
-	if stored.ID.String() != msg.ID.String() {
-		t.Fatalf("returned message ID does not match stored message")
-	}
-	if stored.Content.String() != content.String() {
-		t.Fatalf("content not preserved")
-	}
-	if !stored.SenderID.Equals(buyer) {
-		t.Fatalf("sender not preserved")
-	}
-	if stored.IsRead {
-		t.Fatalf("new message should be unread")
-	}
-	if stored.SentAt.Before(before) || stored.SentAt.After(after) {
-		t.Fatalf("SentAt = %v, want within [%v, %v]", stored.SentAt, before, after)
+	if conv.LastMessageAt.Before(before) || conv.LastMessageAt.After(after) {
+		t.Fatalf("LastMessageAt = %v, want within [%v, %v]", conv.LastMessageAt, before, after)
 	}
 }
 
-func TestConversation_AddMessage_SellerCanSend(t *testing.T) {
+func TestConversation_RecordLastMessage_AdvancesUpdatedAt(t *testing.T) {
 	t.Parallel()
 
 	conv := newOpenConversation(t)
-	seller := conv.SellerID
-
-	msg, err := conv.AddMessage(seller, mustContent(t, "hello buyer"))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !msg.SenderID.Equals(seller) {
-		t.Fatalf("sender mismatch")
-	}
-	if len(conv.Messages) != 1 {
-		t.Fatalf("Messages len = %d, want 1", len(conv.Messages))
-	}
-}
-
-func TestConversation_AddMessage_AdvancesUpdatedAt(t *testing.T) {
-	t.Parallel()
-
-	conv := newOpenConversation(t)
-	originalUpdatedAt := conv.UpdatedAt
+	original := conv.UpdatedAt
 	time.Sleep(time.Millisecond)
 
-	if _, err := conv.AddMessage(FixedBuyerID, mustContent(t, "hi")); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	conv.RecordLastMessage(mustContent(t, "hi"))
 
-	if !conv.UpdatedAt.After(originalUpdatedAt) {
-		t.Fatalf("UpdatedAt not advanced: before=%v after=%v", originalUpdatedAt, conv.UpdatedAt)
+	if !conv.UpdatedAt.After(original) {
+		t.Fatalf("UpdatedAt not advanced: before=%v after=%v", original, conv.UpdatedAt)
+	}
+	if !conv.UpdatedAt.Equal(conv.LastMessageAt) {
+		t.Fatalf("UpdatedAt != LastMessageAt after RecordLastMessage")
 	}
 }
 
-func TestConversation_AddMessage_RejectsNonParticipant(t *testing.T) {
+func TestConversation_RecordLastMessage_OverwritesPreviousPreview(t *testing.T) {
 	t.Parallel()
 
 	conv := newOpenConversation(t)
-	third := FixedThirdPartyID
 
-	msg, err := conv.AddMessage(third, mustContent(t, "hi"))
+	conv.RecordLastMessage(mustContent(t, "first"))
+	firstAt := conv.LastMessageAt
+	time.Sleep(time.Millisecond)
 
-	if !errors.Is(err, domainerrors.ErrNotParticipant) {
-		t.Fatalf("err = %v, want ErrNotParticipant", err)
+	conv.RecordLastMessage(mustContent(t, "second"))
+
+	if conv.LastMessagePreview != "second" {
+		t.Fatalf("LastMessagePreview = %q, want %q", conv.LastMessagePreview, "second")
 	}
-	if !errors.Is(err, domainerrors.ErrForbidden) {
-		t.Fatalf("err = %v, want category ErrForbidden", err)
-	}
-	if msg != (entities.Message{}) {
-		t.Fatalf("returned message should be zero value on error, got %+v", msg)
-	}
-	if len(conv.Messages) != 0 {
-		t.Fatalf("Messages len = %d, want 0", len(conv.Messages))
+	if !conv.LastMessageAt.After(firstAt) {
+		t.Fatalf("LastMessageAt not advanced: first=%v, second=%v", firstAt, conv.LastMessageAt)
 	}
 }
 
-func TestConversation_AddMessage_RejectsWhenNotOpen(t *testing.T) {
+func TestConversation_RecordLastMessage_UsesTrimmedContent(t *testing.T) {
 	t.Parallel()
 
-	cases := []struct {
-		name   string
-		status valueobjects.ConversationStatus
-	}{
-		{"closed", valueobjects.StatusClosed},
-		{"archived", valueobjects.StatusArchived},
-	}
+	conv := newOpenConversation(t)
+	content := mustContent(t, "  padded message  ")
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			conv := newConversationInStatus(t, tc.status)
-			buyer := conv.BuyerID
+	conv.RecordLastMessage(content)
 
-			msg, err := conv.AddMessage(buyer, mustContent(t, "hi"))
-
-			if !errors.Is(err, domainerrors.ErrConversationNotOpen) {
-				t.Fatalf("err = %v, want ErrConversationNotOpen", err)
-			}
-			if !errors.Is(err, domainerrors.ErrConflict) {
-				t.Fatalf("err = %v, want category ErrConflict", err)
-			}
-			if msg != (entities.Message{}) {
-				t.Fatalf("returned message should be zero value on error")
-			}
-			if len(conv.Messages) != 0 {
-				t.Fatalf("Messages len = %d, want 0", len(conv.Messages))
-			}
-		})
+	if conv.LastMessagePreview != "padded message" {
+		t.Fatalf("LastMessagePreview = %q, want %q", conv.LastMessagePreview, "padded message")
 	}
 }
 
@@ -282,10 +236,10 @@ func TestConversation_TransitionStatus_Matrix(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			// Drive to source status. Starting from OPEN, then transitioning.
 			var conv *entities.Conversation
 			if c.from.Equals(valueobjects.StatusOpen) {
 				conv = newOpenConversation(t)

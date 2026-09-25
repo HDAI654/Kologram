@@ -15,7 +15,10 @@ type Conversation struct {
 	SellerID  valueobjects.UserID
 	ListingID valueobjects.ListingID
 	Status    valueobjects.ConversationStatus
-	Messages  []Message
+
+	LastMessagePreview string
+	LastMessageAt      time.Time
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -36,7 +39,6 @@ func StartConversation(
 		SellerID:  sellerID,
 		ListingID: listingID,
 		Status:    valueobjects.StatusOpen,
-		Messages:  nil,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}, nil
@@ -46,18 +48,12 @@ func (c *Conversation) IsParticipant(userID valueobjects.UserID) bool {
 	return c.BuyerID.Equals(userID) || c.SellerID.Equals(userID)
 }
 
-// AddMessage appends a message if the sender is a participant and conversation is open.
-func (c *Conversation) AddMessage(senderID valueobjects.UserID, content valueobjects.MessageContent) (Message, error) {
-	if !c.IsParticipant(senderID) {
-		return Message{}, domainerrors.ErrNotParticipant
-	}
-	if !c.Status.AllowsMessages() {
-		return Message{}, domainerrors.ErrConversationNotOpen
-	}
-	msg := NewMessage(c.ID, senderID, content)
-	c.Messages = append(c.Messages, msg)
-	c.UpdatedAt = time.Now().UTC()
-	return msg, nil
+func (c *Conversation) RecordLastMessage(
+	content valueobjects.MessageContent,
+) {
+	c.LastMessagePreview = content.String()
+	c.LastMessageAt = time.Now().UTC()
+	c.UpdatedAt = c.LastMessageAt
 }
 
 // TransitionStatus applies an allowed lifecycle transition.
