@@ -1,170 +1,224 @@
-"""Notification jobs for auth-service events."""
+"""Auth event jobs — email or temporary NOTHING."""
 
 from __future__ import annotations
 
-from src.application.jobs.base import NotificationJob, base_context, resolve_recipient
-from src.domain.events.envelope import IncomingEvent, require_fields
-from src.domain.notifications.email_message import EmailMessage, NotificationSpec
+import logging
+from typing import Any
+
+from src.application.jobs.base import NotificationJob
+from src.domain.events.auth_events import (
+    AccountDeleted,
+    UserLoggedIn,
+    UserLoggedOut,
+    UserRegistered,
+    VerificationTokenCreated,
+)
+from src.domain.ports.email_sender import EmailSender
+
+logger = logging.getLogger(__name__)
 
 
-class AccountDeletedJob(NotificationJob):
-    event_type = "AccountDeleted"
+def _retry_send(sender: EmailSender, *, to: str, subject: str, body: str, max_attempts: int) -> None:
+    """Send with up to max_attempts tries; last failure is logged and skipped."""
+    from src.exceptions import EmailSendError
 
-    def spec(self) -> NotificationSpec:
-        return NotificationSpec(
-            event_type=self.event_type,
-            purpose="Confirm the user's account was deleted.",
-            recipient_source="event.email (preferred) or cannot notify without email",
-            subject_intent="Account deletion confirmation",
-            required_context_keys=("user_id", "occurred_at"),
-            optional_context_keys=("email",),
-            security_notes="Do not imply recoverability unless product supports it.",
+    last_error: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            sender.send(to=to, subject=subject, body=body)
+            return
+        except EmailSendError as exc:
+            last_error = exc
+            logger.warning(
+                "email send failed attempt=%s/%s to=%s error=%s",
+                attempt,
+                max_attempts,
+                to,
+                exc,
+            )
+    logger.error(
+        "email skipped after %s attempts to=%s error=%s",
+        max_attempts,
+        to,
+        last_error,
+    )
+
+
+class UserRegisteredJob(NotificationJob):
+    event_type = "UserRegistered"
+
+    def __init__(self, email_sender: EmailSender, max_attempts: int = 3) -> None:
+        self._sender = email_sender
+        self._max_attempts = max_attempts
+
+    def handle(self, payload: dict[str, Any]) -> None:
+        event = UserRegistered(
+            user_id=str(payload.get("user_id", "")),
+            email=str(payload.get("email", "")),
+            occurred_at=payload.get("occurred_at"),
         )
-
-    def build(self, event: IncomingEvent) -> EmailMessage:
-        require_fields(event, "user_id")
-        to = resolve_recipient(event)
-        return EmailMessage(
-            to=to,
-            subject_key="account_deleted",
-            template_key="account_deleted",
-            context=base_context(
-                event,
-                user_id=event.get("user_id"),
-            ),
-            is_security_sensitive=True,
+        subject = "Welcome to Kologram"
+        body = (
+            f"Hi,\n\n"
+            f"Your Kologram account is ready.\n"
+            f"You signed up with {event.email}.\n\n"
+            f"If this was not you, contact support.\n\n"
+            f"— Kologram\n"
+        )
+        _retry_send(
+            self._sender,
+            to=event.email,
+            subject=subject,
+            body=body,
+            max_attempts=self._max_attempts,
         )
 
 
 class UserLoggedInJob(NotificationJob):
     event_type = "UserLoggedIn"
 
-    def spec(self) -> NotificationSpec:
-        return NotificationSpec(
-            event_type=self.event_type,
-            purpose="Security alert: successful login.",
-            recipient_source="event.email",
-            subject_intent="New sign-in to your account",
-            required_context_keys=("user_id", "email", "occurred_at"),
-            optional_context_keys=("session_id", "device", "role"),
-            security_notes=(
-                "Instruct user to revoke session via profile if login was not them. "
-                "Do not log session_id at info level in application logs."
-            ),
-            is_security_sensitive=True,
-        )
+    def __init__(self, email_sender: EmailSender, max_attempts: int = 3) -> None:
+        self._sender = email_sender
+        self._max_attempts = max_attempts
 
-    def build(self, event: IncomingEvent) -> EmailMessage:
-        require_fields(event, "user_id", "email")
-        to = resolve_recipient(event)
-        return EmailMessage(
-            to=to,
-            subject_key="user_logged_in",
-            template_key="user_logged_in",
-            context=base_context(
-                event,
-                user_id=event.get("user_id"),
-                email=event.get("email"),
-                session_id=event.get("session_id"),
-                device=event.get("device"),
-                role=event.get("role"),
-                guidance="If this was not you, open your account security settings "
-                "and revoke the session.",
-            ),
-            is_security_sensitive=True,
+    def handle(self, payload: dict[str, Any]) -> None:
+        event = UserLoggedIn(
+            user_id=str(payload.get("user_id", "")),
+            email=str(payload.get("email", "")),
+            session_id=str(payload.get("session_id", "")),
+            device=str(payload.get("device", "unknown")),
+            occurred_at=payload.get("occurred_at"),
+        )
+        subject = "New sign-in on your Kologram account"
+        body = (
+            f"Hi,\n\n"
+            f"There was a new sign-in to your account.\n"
+            f"Device: {event.device}\n\n"
+            f"If this was you, no action is needed.\n"
+            f"If not, reset your password and contact support.\n\n"
+            f"— Kologram\n"
+        )
+        _retry_send(
+            self._sender,
+            to=event.email,
+            subject=subject,
+            body=body,
+            max_attempts=self._max_attempts,
         )
 
 
 class UserLoggedOutJob(NotificationJob):
     event_type = "UserLoggedOut"
 
-    def spec(self) -> NotificationSpec:
-        return NotificationSpec(
-            event_type=self.event_type,
-            purpose="Informational logout confirmation.",
-            recipient_source="event.email if present",
-            subject_intent="You signed out",
-            required_context_keys=("user_id", "occurred_at"),
-            optional_context_keys=("session_id", "device", "email"),
-            security_notes="Avoid alarmist wording.",
-            is_security_sensitive=False,
+    def __init__(self, email_sender: EmailSender, max_attempts: int = 3) -> None:
+        self._sender = email_sender
+        self._max_attempts = max_attempts
+
+    def handle(self, payload: dict[str, Any]) -> None:
+        # Logout payload has no email in some producers — prefer payload email if present.
+        email = str(payload.get("email", "")).strip()
+        event = UserLoggedOut(
+            user_id=str(payload.get("user_id", "")),
+            session_id=str(payload.get("session_id", "")),
+            device=str(payload.get("device", "unknown")),
+            occurred_at=payload.get("occurred_at"),
         )
-
-    def build(self, event: IncomingEvent) -> EmailMessage:
-        require_fields(event, "user_id")
-        to = resolve_recipient(event)
-        return EmailMessage(
-            to=to,
-            subject_key="user_logged_out",
-            template_key="user_logged_out",
-            context=base_context(
-                event,
-                user_id=event.get("user_id"),
-                session_id=event.get("session_id"),
-                device=event.get("device"),
-            ),
+        if not email:
+            logger.info(
+                "UserLoggedOut: no email on payload; skip send user_id=%s",
+                event.user_id,
+            )
+            return
+        subject = "You signed out of Kologram"
+        body = (
+            f"Hi,\n\n"
+            f"You signed out successfully.\n"
+            f"Device: {event.device}\n\n"
+            f"If this was not you, reset your password.\n\n"
+            f"— Kologram\n"
         )
-
-
-class UserRegisteredJob(NotificationJob):
-    event_type = "UserRegistered"
-
-    def spec(self) -> NotificationSpec:
-        return NotificationSpec(
-            event_type=self.event_type,
-            purpose="Welcome / registration confirmation.",
-            recipient_source="event.email",
-            subject_intent="Welcome — account created",
-            required_context_keys=("user_id", "email", "occurred_at"),
-            security_notes="Never include passwords or hashes.",
-        )
-
-    def build(self, event: IncomingEvent) -> EmailMessage:
-        require_fields(event, "user_id", "email")
-        to = resolve_recipient(event)
-        return EmailMessage(
-            to=to,
-            subject_key="user_registered",
-            template_key="user_registered",
-            context=base_context(
-                event,
-                user_id=event.get("user_id"),
-                email=event.get("email"),
-            ),
+        _retry_send(
+            self._sender,
+            to=email,
+            subject=subject,
+            body=body,
+            max_attempts=self._max_attempts,
         )
 
 
-class VerificationTokenCreatedJob(NotificationJob):
+class AccountDeletedJob(NotificationJob):
+    event_type = "AccountDeleted"
+
+    def handle(self, payload: dict[str, Any]) -> None:
+        # Temporary NOTHING: no email / side effect until product defines retention messaging.
+        event = AccountDeleted(
+            user_id=str(payload.get("user_id", "")),
+            occurred_at=payload.get("occurred_at"),
+        )
+        logger.info("AccountDeleted temporary NOTHING user_id=%s", event.user_id)
+
+
+class VerifyEmailTokenJob(NotificationJob):
+    """VerificationTokenCreated with token_type=verifyemail."""
+
     event_type = "VerificationTokenCreated"
 
-    def spec(self) -> NotificationSpec:
-        return NotificationSpec(
-            event_type=self.event_type,
-            purpose="Deliver verification / reset token to the user.",
-            recipient_source="event.email",
-            subject_intent="Your verification code / token",
-            required_context_keys=("email", "token", "token_type", "occurred_at"),
-            security_notes=(
-                "Include token in email only. Never log the token. "
-                "Warn user to ignore if they did not request it."
-            ),
-            is_security_sensitive=True,
+    def __init__(self, email_sender: EmailSender, max_attempts: int = 3) -> None:
+        self._sender = email_sender
+        self._max_attempts = max_attempts
+
+    def handle(self, payload: dict[str, Any]) -> None:
+        event = VerificationTokenCreated(
+            token=str(payload.get("token", "")),
+            email=str(payload.get("email", "")),
+            token_type=str(payload.get("token_type", "")),
+            occurred_at=payload.get("occurred_at"),
+        )
+        subject = "Confirm your Kologram email"
+        body = (
+            f"Hi,\n\n"
+            f"Use this code to confirm your email address:\n\n"
+            f"  {event.token}\n\n"
+            f"If you did not create a Kologram account, ignore this message.\n\n"
+            f"— Kologram\n"
+        )
+        _retry_send(
+            self._sender,
+            to=event.email,
+            subject=subject,
+            body=body,
+            max_attempts=self._max_attempts,
         )
 
-    def build(self, event: IncomingEvent) -> EmailMessage:
-        require_fields(event, "email", "token", "token_type")
-        to = resolve_recipient(event)
-        # Token is intentional in context for the email renderer only.
-        return EmailMessage(
-            to=to,
-            subject_key="verification_token_created",
-            template_key="verification_token_created",
-            context=base_context(
-                event,
-                email=event.get("email"),
-                token=event.get("token"),
-                token_type=event.get("token_type"),
-                security_warning="Ignore this message if you did not request it.",
-            ),
-            is_security_sensitive=True,
+
+class ResetPasswordTokenJob(NotificationJob):
+    """VerificationTokenCreated with token_type=forget_pass_verify."""
+
+    event_type = "VerificationTokenCreated"
+
+    def __init__(self, email_sender: EmailSender, max_attempts: int = 3) -> None:
+        self._sender = email_sender
+        self._max_attempts = max_attempts
+
+    def handle(self, payload: dict[str, Any]) -> None:
+        event = VerificationTokenCreated(
+            token=str(payload.get("token", "")),
+            email=str(payload.get("email", "")),
+            token_type=str(payload.get("token_type", "")),
+            occurred_at=payload.get("occurred_at"),
+        )
+        subject = "Reset your Kologram password"
+        body = (
+            f"Hi,\n\n"
+            f"Use this code to reset your password:\n\n"
+            f"  {event.token}\n\n"
+            f"If you did not ask for a reset, ignore this message.\n\n"
+            f"— Kologram\n"
+        )
+        _retry_send(
+            self._sender,
+            to=event.email,
+            subject=subject,
+            body=body,
+            max_attempts=self._max_attempts,
         )

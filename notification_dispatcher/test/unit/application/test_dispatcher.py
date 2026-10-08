@@ -1,195 +1,230 @@
-"""Dispatcher and job unit tests (no RabbitMQ / SMTP)."""
-
 from __future__ import annotations
 
-import json
+from typing import Any
 
 import pytest
 
-from src.application.dispatcher import (
-    EventDispatcher,
-    classify_error,
-    default_job_registry,
+from src.application.dispatcher import Dispatcher
+from src.application.jobs.auth_jobs import (
+    AccountDeletedJob,
+    UserLoggedInJob,
+    UserLoggedOutJob,
+    UserRegisteredJob,
+    VerifyEmailTokenJob,
+    ResetPasswordTokenJob,
 )
-from src.exceptions import (
-    PermanentProcessingError,
-    TransientProcessingError,
-    UnknownEventTypeError,
-)
-from src.infrastructure.email.console_sender import ConsoleEmailSender
-from src.infrastructure.persistence.idempotency import InMemoryIdempotencyStore
+from src.application.jobs.market_jobs import ListingCreatedJob
+from src.application.jobs.chat_jobs import MessageSentJob
+from src.domain.ports.email_sender import EmailSender
+from src.domain.ports.idempotency_store import IdempotencyStore
+from src.exceptions import EmailSendError, UnknownEventTypeError
 
 
-@pytest.fixture
-def sender() -> ConsoleEmailSender:
-    return ConsoleEmailSender()
+class FakeEmail(EmailSender):
+    def __init__(self) -> None:
+        self.sent: list[tuple[str, str, str]] = []
+        self.fail_times = 0
+
+    def send(self, *, to: str, subject: str, body: str) -> None:
+        if self.fail_times > 0:
+            self.fail_times -= 1
+            raise EmailSendError("boom")
+        self.sent.append((to, subject, body))
 
 
-@pytest.fixture
-def dispatcher(sender: ConsoleEmailSender) -> EventDispatcher:
-    return EventDispatcher(
-        email_sender=sender,
-        idempotency_store=InMemoryIdempotencyStore(),
+class MemoryIdem(IdempotencyStore):
+    def __init__(self) -> None:
+        self.keys: set[str] = set()
+
+    def already_processed(self, key: str) -> bool:
+        return key in self.keys
+
+    def mark_processed(self, key: str) -> None:
+        self.keys.add(key)
+
+
+def _dispatcher(email: FakeEmail, idem: MemoryIdem) -> Dispatcher:
+    return Dispatcher(
+        {
+            "UserRegistered": UserRegisteredJob(email, max_attempts=3),
+            "UserLoggedIn": UserLoggedInJob(email, max_attempts=3),
+            "UserLoggedOut": UserLoggedOutJob(email, max_attempts=3),
+            "AccountDeleted": AccountDeletedJob(),
+            "ListingCreated": ListingCreatedJob(),
+            "MessageSent": MessageSentJob(),
+        },
+        idem,
+        verification_jobs={
+            "verifyemail": VerifyEmailTokenJob(email, max_attempts=3),
+            "forget_pass_verify": ResetPasswordTokenJob(email, max_attempts=3),
+        },
     )
 
 
-def _body(event_type: str, **fields) -> bytes:
-    payload = {"event_type": event_type, "occurred_at": "2026-08-13T12:00:00+00:00"}
-    payload.update(fields)
-    return json.dumps(payload).encode()
-
-
-@pytest.mark.asyncio
-async def test_user_registered(dispatcher: EventDispatcher, sender: ConsoleEmailSender):
-    result = await dispatcher.process_body(
-        _body("UserRegistered", user_id="u1", email="user@example.com")
+def test_user_registered_sends_welcome() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="k1",
+        event_type="UserRegistered",
+        payload={"user_id": "u1", "email": "a@b.com"},
     )
-    assert result.status == "processed"
-    assert len(sender.sent) == 1
-    assert sender.sent[0].template_key == "user_registered"
-    assert sender.sent[0].to == "user@example.com"
+    assert len(email.sent) == 1
+    assert email.sent[0][0] == "a@b.com"
+    assert "Welcome" in email.sent[0][1]
 
 
-@pytest.mark.asyncio
-async def test_user_logged_in_security_context(
-    dispatcher: EventDispatcher, sender: ConsoleEmailSender
-):
-    await dispatcher.process_body(
-        _body(
-            "UserLoggedIn",
-            user_id="u1",
-            email="user@example.com",
-            session_id="sess-1",
-            device="Chrome/Linux",
-            role="user",
-        )
+def test_user_logged_in_includes_device() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="k2",
+        event_type="UserLoggedIn",
+        payload={
+            "user_id": "u1",
+            "email": "a@b.com",
+            "session_id": "s1",
+            "device": "iPhone",
+        },
     )
-    msg = sender.sent[0]
-    assert msg.is_security_sensitive
-    assert "guidance" in msg.context
-    assert msg.context["session_id"] == "sess-1"
+    assert "iPhone" in email.sent[0][2]
 
 
-@pytest.mark.asyncio
-async def test_verification_token_in_context_not_duplicated_on_replay(
-    dispatcher: EventDispatcher, sender: ConsoleEmailSender
-):
-    body = _body(
-        "VerificationTokenCreated",
-        email="user@example.com",
-        token="SECRET-TOKEN-XYZ",
-        token_type="email_verify",
+def test_account_deleted_nothing() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="k3",
+        event_type="AccountDeleted",
+        payload={"user_id": "u1"},
     )
-    r1 = await dispatcher.process_body(body)
-    r2 = await dispatcher.process_body(body)
-    assert r1.status == "processed"
-    assert r2.status == "duplicate"
-    assert len(sender.sent) == 1
-    assert sender.sent[0].context["token"] == "SECRET-TOKEN-XYZ"
+    assert email.sent == []
 
 
-@pytest.mark.asyncio
-async def test_unknown_event(dispatcher: EventDispatcher):
+def test_listing_created_nothing() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="k4",
+        event_type="ListingCreated",
+        payload={"listing_id": "l1"},
+    )
+    assert email.sent == []
+
+
+def test_message_sent_nothing() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="k5",
+        event_type="MessageSent",
+        payload={"message_id": "m1"},
+    )
+    assert email.sent == []
+
+
+def test_verifyemail_token() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="k6",
+        event_type="VerificationTokenCreated",
+        payload={
+            "email": "a@b.com",
+            "token": "tok-1",
+            "token_type": "verifyemail",
+        },
+    )
+    assert "tok-1" in email.sent[0][2]
+    assert "Confirm" in email.sent[0][1]
+
+
+def test_reset_token() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="k7",
+        event_type="VerificationTokenCreated",
+        payload={
+            "email": "a@b.com",
+            "token": "tok-2",
+            "token_type": "forget_pass_verify",
+        },
+    )
+    assert "tok-2" in email.sent[0][2]
+    assert "Reset" in email.sent[0][1]
+
+
+def test_idempotency_skips_second() -> None:
+    email = FakeEmail()
+    idem = MemoryIdem()
+    d = _dispatcher(email, idem)
+    d.dispatch(
+        idempotency_key="same",
+        event_type="UserRegistered",
+        payload={"user_id": "u1", "email": "a@b.com"},
+    )
+    d.dispatch(
+        idempotency_key="same",
+        event_type="UserRegistered",
+        payload={"user_id": "u1", "email": "a@b.com"},
+    )
+    assert len(email.sent) == 1
+
+
+def test_retry_then_success() -> None:
+    email = FakeEmail()
+    email.fail_times = 2
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="r1",
+        event_type="UserRegistered",
+        payload={"user_id": "u1", "email": "a@b.com"},
+    )
+    assert len(email.sent) == 1
+
+
+def test_retry_exhausted_skips() -> None:
+    email = FakeEmail()
+    email.fail_times = 10
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="r2",
+        event_type="UserRegistered",
+        payload={"user_id": "u1", "email": "a@b.com"},
+    )
+    assert email.sent == []
+
+
+def test_unknown_event_raises() -> None:
+    d = _dispatcher(FakeEmail(), MemoryIdem())
     with pytest.raises(UnknownEventTypeError):
-        await dispatcher.process_body(_body("SomethingElse", user_id="x"))
+        d.dispatch(idempotency_key="x", event_type="Nope", payload={})
 
 
-@pytest.mark.asyncio
-async def test_missing_required_field(dispatcher: EventDispatcher):
-    with pytest.raises(PermanentProcessingError):
-        await dispatcher.process_body(_body("UserRegistered", user_id="u1"))
-
-
-@pytest.mark.asyncio
-async def test_account_deleted_without_email_fails(dispatcher: EventDispatcher):
-    with pytest.raises(PermanentProcessingError):
-        await dispatcher.process_body(_body("AccountDeleted", user_id="u1"))
-
-
-@pytest.mark.asyncio
-async def test_account_deleted_with_email(
-    dispatcher: EventDispatcher, sender: ConsoleEmailSender
-):
-    await dispatcher.process_body(
-        _body("AccountDeleted", user_id="u1", email="gone@example.com")
+def test_user_logged_out_with_email() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="lo1",
+        event_type="UserLoggedOut",
+        payload={
+            "user_id": "u1",
+            "email": "a@b.com",
+            "session_id": "s1",
+            "device": "web",
+        },
     )
-    assert sender.sent[0].to == "gone@example.com"
+    assert len(email.sent) == 1
+    assert "signed out" in email.sent[0][2].lower() or "sign out" in email.sent[0][2].lower()
 
 
-@pytest.mark.asyncio
-async def test_category_created_admin_fallback(
-    dispatcher: EventDispatcher, sender: ConsoleEmailSender
-):
-    await dispatcher.process_body(
-        _body("CategoryCreated", category_id="c1", name="Electronics")
+def test_user_logged_out_without_email_skips() -> None:
+    email = FakeEmail()
+    d = _dispatcher(email, MemoryIdem())
+    d.dispatch(
+        idempotency_key="lo2",
+        event_type="UserLoggedOut",
+        payload={"user_id": "u1", "session_id": "s1", "device": "web"},
     )
-    assert "@" in sender.sent[0].to
-    assert sender.sent[0].context["name"] == "Electronics"
-
-
-@pytest.mark.asyncio
-async def test_listing_status_changed(
-    dispatcher: EventDispatcher, sender: ConsoleEmailSender
-):
-    await dispatcher.process_body(
-        _body(
-            "ListingStatusChanged",
-            listing_id="l1",
-            seller_id="s1",
-            old_status="DRAFT",
-            new_status="ACTIVE",
-            email="seller@example.com",
-        )
-    )
-    ctx = sender.sent[0].context
-    assert ctx["old_status"] == "DRAFT"
-    assert ctx["new_status"] == "ACTIVE"
-
-
-@pytest.mark.asyncio
-async def test_transient_email_failure(
-    dispatcher: EventDispatcher, sender: ConsoleEmailSender
-):
-    sender.fail_next = True
-    with pytest.raises(TransientProcessingError):
-        await dispatcher.process_body(
-            _body("UserRegistered", user_id="u1", email="user@example.com")
-        )
-
-
-@pytest.mark.asyncio
-async def test_all_supported_types_registered():
-    registry = default_job_registry()
-    expected = {
-        "AccountDeleted",
-        "UserLoggedIn",
-        "UserLoggedOut",
-        "UserRegistered",
-        "VerificationTokenCreated",
-        "CategoryCreated",
-        "ListingCreated",
-        "ListingDeleted",
-        "ListingPublished",
-        "ListingStatusChanged",
-        "ListingUpdated",
-    }
-    assert set(registry) == expected
-
-
-def test_classify_error():
-    assert classify_error(UnknownEventTypeError("x")) == "permanent"
-    assert classify_error(TransientProcessingError("x")) == "transient"
-
-
-@pytest.mark.asyncio
-async def test_listing_jobs_need_email(dispatcher: EventDispatcher):
-    with pytest.raises(PermanentProcessingError):
-        await dispatcher.process_body(
-            _body(
-                "ListingCreated",
-                listing_id="l1",
-                seller_id="s1",
-                title="Bike",
-                status="DRAFT",
-            )
-        )
+    assert email.sent == []

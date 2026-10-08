@@ -1,5 +1,4 @@
 name: kologram
-
 services:
   # ---------------------------------------------------------------------------
   # Infrastructure
@@ -19,7 +18,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 15
 
   redis:
     image: redis:7-alpine
@@ -29,7 +28,7 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 15
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -43,15 +42,14 @@ services:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 10s
-      retries: 10
+      retries: 15
 
   mailhog:
     image: mailhog/mailhog:v1.0.1
+    profiles: ["mail"]
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
-    profiles:
-      - mail
+      - "1025:1025"
+      - "8025:8025"
 
   # ---------------------------------------------------------------------------
   # Application services
@@ -60,6 +58,8 @@ services:
     build:
       context: .
       dockerfile: auth_service/Dockerfile
+    image: kologram-auth_service
+    restart: unless-stopped
     ports:
       - "8001:8001"
     environment:
@@ -73,6 +73,8 @@ services:
       RABBITMQ_EXCHANGE: auth.events
       AUTH_PRIVATE_KEY_PATH: /app/auth_service/keys/private.pem
       AUTH_PUBLIC_KEY_PATH: /app/auth_service/keys/public.pem
+    volumes:
+      - ./auth_service/keys:/app/auth_service/keys:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,23 +83,30 @@ services:
       rabbitmq:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')",
+        ]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 15s
+      retries: 12
+      start_period: 20s
 
   market_service:
     build:
       context: .
       dockerfile: market_service/Dockerfile
+    image: kologram-market_service
+    restart: unless-stopped
     ports:
       - "8002:8002"
     environment:
       APP_NAME: KologramMarket
       APP_ENV: development
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/market
-      REDIS_ENABLED: "false"
       RABBITMQ_ENABLED: "true"
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       RABBITMQ_EXCHANGE: listing.events
@@ -107,64 +116,79 @@ services:
       rabbitmq:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')",
+        ]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 15s
+      retries: 12
+      start_period: 20s
 
-  chat_service:
-    build:
-      context: chat_service
-      dockerfile: Dockerfile
-    image: kologram-chat_service
+  # Apply chat DDL once (service has no migration runner).
+  chat_schema_init:
+    image: postgres:16-alpine
+    restart: "no"
+    environment:
+      PGPASSWORD: postgres
+    volumes:
+      - ./chat_service/internal/infrastructure/persistence/postgres/schema.sql:/schema.sql:ro
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        until pg_isready -h postgres -U postgres; do sleep 1; done
+        psql -h postgres -U postgres -d chat -v ON_ERROR_STOP=1 -f /schema.sql
+        echo "chat schema applied"
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
+
+  chat_service:
+    build:
+      context: ./chat_service
+      dockerfile: Dockerfile
+    image: kologram-chat_service
+    restart: unless-stopped
+    ports:
+      - "8003:8080"
+    environment:
+      HTTP_ADDR: ":8080"
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/chat?sslmode=disable
+      MARKET_SERVICE_URL: http://market_service:8002
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_EXCHANGE: chat.events
+      EVENT_PUBLISHER: rabbitmq
+      MARKET_HTTP_TIMEOUT: 5s
+    depends_on:
+      postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    environment:
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/chat?sslmode=disable
-      - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - RABBITMQ_VHOST=/
-      - RABBITMQ_USER=guest
-      - RABBITMQ_PASS=guest
-      - PORT=8003
-    ports:
-      - "8003:8003"
-    restart: unless-stopped 
+      market_service:
+        condition: service_healthy
+      chat_schema_init:
+        condition: service_completed_successfully
 
   admin_service:
     build:
       context: .
       dockerfile: admin_service/Dockerfile
+    image: kologram-admin_service
+    restart: unless-stopped
     ports:
       - "8004:8004"
     environment:
       APP_ENV: development
       DJANGO_SECRET_KEY: dev-docker-admin-secret-change-me
       ALLOWED_HOSTS: "*"
-      ADMIN_DB_ENGINE: django.db.backends.postgresql
-      ADMIN_DB_NAME: admin
-      ADMIN_DB_USER: postgres
-      ADMIN_DB_PASSWORD: postgres
-      ADMIN_DB_HOST: postgres
-      ADMIN_DB_PORT: "5432"
-      AUTH_DB_ENGINE: django.db.backends.postgresql
-      AUTH_DB_NAME: auth
-      AUTH_DB_USER: postgres
-      AUTH_DB_PASSWORD: postgres
-      AUTH_DB_HOST: postgres
-      AUTH_DB_PORT: "5432"
-      MARKET_DB_ENGINE: django.db.backends.postgresql
-      MARKET_DB_NAME: market
-      MARKET_DB_USER: postgres
-      MARKET_DB_PASSWORD: postgres
-      MARKET_DB_HOST: postgres
-      MARKET_DB_PORT: "5432"
+      ADMIN_DB_URL: postgresql://postgres:postgres@postgres:5432/admin
+      AUTH_DB_URL: postgresql://postgres:postgres@postgres:5432/auth
+      MARKET_DB_URL: postgresql://postgres:postgres@postgres:5432/market
     depends_on:
       postgres:
         condition: service_healthy
@@ -177,24 +201,33 @@ services:
     build:
       context: .
       dockerfile: notification_dispatcher/Dockerfile
+    image: kologram-notification_dispatcher
+    restart: unless-stopped
     environment:
-      APP_NAME: notification-dispatcher
+      APP_NAME: notification_dispatcher
       APP_ENV: development
-      RABBITMQ_ENABLED: "true"
+      LOG_LEVEL: INFO
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       RABBITMQ_EXCHANGES: auth.events,listing.events,chat.events
       RABBITMQ_QUEUE: notification.dispatcher
+      RABBITMQ_PREFETCH: "10"
       EMAIL_ENABLED: "false"
-      EMAIL_PROVIDER: console
+      EMAIL_FROM: noreply@kologram.local
       SMTP_HOST: mailhog
       SMTP_PORT: "1025"
-      IDEMPOTENCY_ENABLED: "true"
-      IDEMPOTENCY_DB_URL: sqlite+aiosqlite:////app/data/idempotency.db
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_USE_TLS: "false"
+      SMTP_USE_SSL: "false"
+      EMAIL_MAX_ATTEMPTS: "3"
+      IDEMPOTENCY_DB_PATH: /app/data/idempotency.sqlite3
     volumes:
       - notification_data:/app/data
     depends_on:
       rabbitmq:
         condition: service_healthy
+      auth_service:
+        condition: service_started
 
 volumes:
   postgres_data:

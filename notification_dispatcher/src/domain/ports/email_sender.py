@@ -1,13 +1,11 @@
+"""Port: deliver a plain-text email."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from src.domain.notifications.email_message import EmailMessage
-
 
 class EmailSender(ABC):
-    """Port for delivering an EmailMessage."""
-
     @abstractmethod
-    async def send(self, message: EmailMessage) -> None:
-        raise NotImplementedError
+    def send(self, *, to: str, subject: str, body: str) -> None:
+        """Send plain-text email. Raises EmailSendError on failure."""
