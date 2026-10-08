@@ -199,8 +199,9 @@ namespace Auth {
     ACTIVE
     SUSPENDED
   }
-  User "1" --> "0..*" Session : has
+  
 }
+User "1" --> "0..*" Session : has
 
 namespace Market {
   class Category {
@@ -237,10 +238,13 @@ namespace Market {
     CANCELLED
     SUSPENDED
   }
-  Category "1" --> "0..*" Listing : classifies
-  Listing "1" *-- "0..*" ListingImage : contains
-  Category "0..1" --> "0..*" Category : parent
+  
 }
+
+Category "1" --> "0..*" Listing : classifies
+Listing "1" *-- "0..*" ListingImage : contains
+Category "0..1" --> "0..*" Category : parent
+
 
 namespace Chat {
   class Conversation {
@@ -286,10 +290,12 @@ namespace Chat {
     +UserId sellerId
     +Boolean messageAllowed
   }
-  Conversation "1" *-- "0..*" Message : contains
-  Conversation "1" *-- "2" ConversationUserState : per participant
-  Conversation ..> ChatListingView : references listing
+  
 }
+
+Conversation "1" *-- "0..*" Message : contains
+Conversation "1" *-- "2" ConversationUserState : per participant
+Conversation ..> ChatListingView : references listing
 
 User "1" --> "0..*" Listing : sells
 User "1" --> "0..*" Conversation : buyer or seller
