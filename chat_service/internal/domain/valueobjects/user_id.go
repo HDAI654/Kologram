@@ -6,7 +6,6 @@ import (
 	domainerrors "github.com/HDAI654/Kologram/chat_service/internal/domain/errors"
 )
 
-// UserID identifies a marketplace user (buyer or seller).
 type UserID struct {
 	value string
 }

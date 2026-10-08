@@ -6,7 +6,6 @@ import (
 	domainerrors "github.com/HDAI654/Kologram/chat_service/internal/domain/errors"
 )
 
-// ListingID references the listing the conversation is about.
 type ListingID struct {
 	value string
 }

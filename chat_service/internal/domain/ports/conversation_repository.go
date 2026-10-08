@@ -8,39 +8,72 @@ import (
 	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
-// ConversationCursor anchors a page in a user's conversation list.
-// Sort key is (LastMessageAt DESC, ID DESC).
-type ConversationCursor struct {
-	LastMessageAt time.Time
-	ID            valueobjects.ConversationID
-}
+// ConversationListFilter selects which rows ListForUser returns.
+// Hidden conversations are always excluded; they reappear when the user
+// unhides or when SendMessage unhides the receiver on a new message.
+type ConversationListFilter int
 
-// ConversationRepository persists and loads conversation aggregates.
+const (
+	// Active inbox: not archived, not hidden.
+	ListFilterActive ConversationListFilter = iota
+	// Archived tab: archived, not hidden.
+	ListFilterArchived
+)
+
 type ConversationRepository interface {
 	Add(ctx context.Context, conversation *entities.Conversation) error
-
 	Update(ctx context.Context, conversation *entities.Conversation) error
 
-	// Delete soft-deletes the conversation. Subsequent reads do not return it.
-	Delete(ctx context.Context, id valueobjects.ConversationID) error
-
-	// GetByID returns the conversation. Implementations must return a
-	// NotFoundError when no row exists.
+	// Must return NotFoundError when no row exists.
 	GetByID(ctx context.Context, id valueobjects.ConversationID) (*entities.Conversation, error)
 
-	// FindByBuyerAndListing returns (nil, nil) when no conversation exists.
+	// Idempotency key for StartConversation: one thread per (buyer, listing).
+	// Seller is implied by the listing. Returns (nil, nil) when none exists.
 	FindByBuyerAndListing(
 		ctx context.Context,
 		buyerID valueobjects.UserID,
 		listingID valueobjects.ListingID,
 	) (*entities.Conversation, error)
 
-	// ListForUser returns a page of conversations the user participates in,
-	// ordered by most recent activity. A nil cursor starts from the newest.
+	// Single read-model page: shared conversation fields + the caller's
+	// ConversationUserState. Sort: (IsPinned DESC, LastMessageAt DESC, ID DESC).
+	// No total count — callers use len(items) == limit as has-more.
 	ListForUser(
 		ctx context.Context,
 		userID valueobjects.UserID,
-		cursor *ConversationCursor,
+		filter ConversationListFilter,
+		cursor *ConversationListCursor,
 		limit int,
+	) ([]ConversationListItem, error)
+
+	// Used by MarkListingUnavailable to freeze every thread on a listing.
+	ListByListingID(
+		ctx context.Context,
+		listingID valueobjects.ListingID,
 	) ([]*entities.Conversation, error)
+}
+
+// Sort key: (IsPinned DESC, LastMessageAt DESC, ID DESC).
+type ConversationListCursor struct {
+	IsPinned      bool
+	LastMessageAt time.Time
+	ID            valueobjects.ConversationID
+}
+
+// ConversationListItem is a read projection only — never pass to a write path.
+type ConversationListItem struct {
+	ConversationID     valueobjects.ConversationID
+	BuyerID            valueobjects.UserID
+	SellerID           valueobjects.UserID
+	ListingID          valueobjects.ListingID
+	IsReadOnly         bool
+	LastMessagePreview string
+	LastMessageAt      time.Time
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+
+	UnreadCount int
+	IsArchived  bool
+	IsPinned    bool
+	IsMuted     bool
 }

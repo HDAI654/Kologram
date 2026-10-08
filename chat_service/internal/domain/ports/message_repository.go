@@ -8,40 +8,53 @@ import (
 	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
-// MessageCursor anchors a page in a conversation's message history.
-// Sort key is (SentAt, ID) — both are required to break timestamp ties.
+// Sort key: (SentAt, ID) — both required to break timestamp ties.
 type MessageCursor struct {
 	SentAt time.Time
 	ID     valueobjects.MessageID
 }
 
-// Direction selects which side of the cursor to walk.
 type Direction int
 
 const (
-	// DirectionOlder walks backward in history (scroll up).
-	DirectionOlder Direction = iota
-	// DirectionNewer walks forward in time (sync new messages).
-	DirectionNewer
+	DirectionOlder Direction = iota // scroll up / history
+	DirectionNewer                  // sync after reconnect
 )
 
-// MessageRepository loads and saves messages.
 type MessageRepository interface {
 	Add(ctx context.Context, message *entities.Message) error
 
-	// Delete soft-deletes the message. Subsequent reads do not return it.
-	Delete(ctx context.Context, message_id valueobjects.MessageID) error
-
+	// Used for DeleteForEveryone (flag + DeletedAt).
 	Update(ctx context.Context, message *entities.Message) error
 
-	// ListMessages returns a page of messages in a conversation.
+	// Must return NotFoundError when no row exists.
+	// Returns soft-deleted messages (admin/internal paths may need them).
+	GetByID(ctx context.Context, id valueobjects.MessageID) (*entities.Message, error)
+
+	// Returns (nil, nil) when no match — SendMessage idempotency.
+	// Includes soft-deleted rows so retries still resolve to the same message.
+	FindByClientMessageID(
+		ctx context.Context,
+		senderID valueobjects.UserID,
+		conversationID valueobjects.ConversationID,
+		clientMessageID string,
+	) (*entities.Message, error)
+
+	// Latest non-deleted message in the conversation.
+	// Returns (nil, nil) when none remain visible.
+	// Used to refresh LastMessagePreview after DeleteForEveryone.
+	FindLatestVisible(
+		ctx context.Context,
+		conversationID valueobjects.ConversationID,
+	) (*entities.Message, error)
+
+	// Participant history: soft-deleted messages are excluded.
 	//
 	// DirectionOlder:
-	//   nil cursor   → newest page, returned newest-first
-	//   given cursor → messages older than the cursor, newest-first
-	//
+	//   nil cursor   → newest page, newest-first
+	//   given cursor → older than cursor, newest-first
 	// DirectionNewer:
-	//   given cursor → messages newer than the cursor, oldest-first
+	//   given cursor → newer than cursor, oldest-first
 	ListMessages(
 		ctx context.Context,
 		conversationID valueobjects.ConversationID,
@@ -49,13 +62,4 @@ type MessageRepository interface {
 		direction Direction,
 		limit int,
 	) ([]*entities.Message, error)
-
-	// CountNewMessagesInConversation returns the number of messages newer
-	// than the cursor. The cursor is typically the last message the caller
-	// has seen.
-	CountNewMessagesInConversation(
-		ctx context.Context,
-		conversationID valueobjects.ConversationID,
-		cursor *MessageCursor,
-	) (int64, error)
 }

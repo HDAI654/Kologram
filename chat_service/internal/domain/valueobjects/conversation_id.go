@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// ConversationID is a UUID v4 identifier for a conversation aggregate.
 type ConversationID struct {
 	value string
 }

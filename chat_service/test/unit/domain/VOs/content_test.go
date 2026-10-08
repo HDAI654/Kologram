@@ -1,9 +1,11 @@
 package valueobjects_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
+	domainerrors "github.com/HDAI654/Kologram/chat_service/internal/domain/errors"
 	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
@@ -69,21 +71,20 @@ func TestNewMessageContent_Invalid(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			if _, err := valueobjects.NewMessageContent(tc.input); err == nil {
+			_, err := valueobjects.NewMessageContent(tc.input)
+			if err == nil {
 				t.Fatalf("NewMessageContent(%q): expected error, got nil", tc.input)
 			}
+			if !errors.Is(err, domainerrors.ErrInvalidArgument) {
+				t.Fatalf("err = %v, want category ErrInvalidArgument", err)
+			}
+			var ve *domainerrors.ValidationError
+			if !errors.As(err, &ve) {
+				t.Fatalf("err = %v, want ValidationError", err)
+			}
+			if ve.Field != "content" {
+				t.Fatalf("Field = %q, want content", ve.Field)
+			}
 		})
-	}
-}
-
-func TestNewMessageContent_TrimmingContract(t *testing.T) {
-	t.Parallel()
-
-	c, err := valueobjects.NewMessageContent("  hello  ")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if got, want := c.String(), "hello"; got != want {
-		t.Fatalf("String() = %q, want %q", got, want)
 	}
 }

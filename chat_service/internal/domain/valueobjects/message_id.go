@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// MessageID identifies a message within a conversation.
 type MessageID struct {
 	value string
 }
@@ -28,3 +27,7 @@ func GenerateMessageID() MessageID {
 }
 
 func (id MessageID) String() string { return id.value }
+
+func (id MessageID) Equals(other MessageID) bool { return id.value == other.value }
+
+func (id MessageID) IsZero() bool { return id.value == "" }

@@ -1,22 +1,26 @@
 package valueobjects_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
 
+	domainerrors "github.com/HDAI654/Kologram/chat_service/internal/domain/errors"
 	"github.com/HDAI654/Kologram/chat_service/internal/domain/valueobjects"
 )
 
 type idConstructor struct {
-	name string
-	new  func(string) (string, error)
+	name  string
+	field string
+	new   func(string) (string, error)
 }
 
 func idConstructors() []idConstructor {
 	return []idConstructor{
 		{
-			name: "ConversationID",
+			name:  "ConversationID",
+			field: "conversation_id",
 			new: func(s string) (string, error) {
 				v, err := valueobjects.NewConversationID(s)
 				if err != nil {
@@ -26,7 +30,8 @@ func idConstructors() []idConstructor {
 			},
 		},
 		{
-			name: "MessageID",
+			name:  "MessageID",
+			field: "message_id",
 			new: func(s string) (string, error) {
 				v, err := valueobjects.NewMessageID(s)
 				if err != nil {
@@ -36,7 +41,8 @@ func idConstructors() []idConstructor {
 			},
 		},
 		{
-			name: "UserID",
+			name:  "UserID",
+			field: "user_id",
 			new: func(s string) (string, error) {
 				v, err := valueobjects.NewUserID(s)
 				if err != nil {
@@ -46,7 +52,8 @@ func idConstructors() []idConstructor {
 			},
 		},
 		{
-			name: "ListingID",
+			name:  "ListingID",
+			field: "listing_id",
 			new: func(s string) (string, error) {
 				v, err := valueobjects.NewListingID(s)
 				if err != nil {
@@ -112,8 +119,19 @@ func TestIDConstructors_Invalid(t *testing.T) {
 			t.Run(ctor.name+"/"+tc.name, func(t *testing.T) {
 				t.Parallel()
 
-				if _, err := ctor.new(tc.input); err == nil {
+				_, err := ctor.new(tc.input)
+				if err == nil {
 					t.Fatalf("expected error for %q, got nil", tc.input)
+				}
+				if !errors.Is(err, domainerrors.ErrInvalidArgument) {
+					t.Fatalf("err = %v, want category ErrInvalidArgument", err)
+				}
+				var ve *domainerrors.ValidationError
+				if !errors.As(err, &ve) {
+					t.Fatalf("err = %v, want ValidationError", err)
+				}
+				if ve.Field != ctor.field {
+					t.Fatalf("Field = %q, want %q", ve.Field, ctor.field)
 				}
 			})
 		}

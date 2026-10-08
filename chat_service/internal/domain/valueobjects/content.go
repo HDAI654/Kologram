@@ -13,7 +13,7 @@ const (
 	maxContentLen = 4000
 )
 
-// MessageContent is validated chat message text.
+// MessageContent is validated chat message text (1–4000 runes after trim).
 type MessageContent struct {
 	value string
 }
