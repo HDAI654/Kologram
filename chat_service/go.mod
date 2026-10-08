@@ -5,6 +5,7 @@ go 1.26.5
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/rabbitmq/amqp091-go v1.15.0
 )
