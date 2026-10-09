@@ -1,3 +1,5 @@
+aio-pika==10.1.0
+aiormq==7.2.1
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
@@ -18,11 +20,14 @@ httpx2==2.13.0
 idna==3.20
 iniconfig==2.3.0
 mccabe==0.7.0
+multidict==7.0.0
 mypy_extensions==1.1.0
 packaging==26.3
+pamqp==4.0.1
 pathspec==1.1.1
 platformdirs==4.11.9
 pluggy==1.6.0
+propcache==0.5.4
 pycodestyle==2.14.0
 pycparser==3.0
 pydantic==2.13.5
@@ -42,3 +47,4 @@ truststore==0.10.4
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 uvicorn==0.53.0
+yarl==1.25.1
