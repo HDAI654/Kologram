@@ -261,6 +261,20 @@ services:
       auth_service:
         condition: service_started
 
+  # ---------------------------------------------------------------------------
+  # Application services
+  # ---------------------------------------------------------------------------
+  frontend:
+      build:
+        context: ./test_ui
+        dockerfile: Dockerfile
+
+      container_name: kologram-frontend
+      restart: unless-stopped
+
+      ports:
+        - "3030:3030"
+
 volumes:
   postgres_data:
   notification_data:
