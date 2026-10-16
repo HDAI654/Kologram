@@ -11,10 +11,11 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY admin_service /app
 
+RUN chmod +x /app/entrypoint.sh
+
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=config.settings
 
 EXPOSE 8004
 
-# Migrate default admin DB then run
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8004"]
+CMD ["/app/entrypoint.sh"]

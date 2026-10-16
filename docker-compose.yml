@@ -195,6 +195,11 @@ services:
       ADMIN_DB_URL: postgresql://postgres:postgres@postgres:5432/admin
       AUTH_DB_URL: postgresql://postgres:postgres@postgres:5432/auth
       MARKET_DB_URL: postgresql://postgres:postgres@postgres:5432/market
+
+      # Superuser bootstrap (used once, then kept in DB)
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin123}
+      DJANGO_SUPERUSER_EMAIL:    ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
     depends_on:
       postgres:
         condition: service_healthy
