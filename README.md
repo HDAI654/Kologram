@@ -4,6 +4,10 @@ Marketplace platform split into small services: accounts, listings, chat, staff 
 
 Traffic enters through a single gateway. Each service owns its database and talks over HTTP, GraphQL, WebSocket, or RabbitMQ events.
 
+<p align="center">
+  <img src="image.png" alt="Screenshot of the Kologram home page" width="100%">
+</p>
+
 ## Services
 
 | Service | What it does | Port |
