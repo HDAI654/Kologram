@@ -18,7 +18,9 @@ from src.domain.ports.email_sender import EmailSender
 logger = logging.getLogger(__name__)
 
 
-def _retry_send(sender: EmailSender, *, to: str, subject: str, body: str, max_attempts: int) -> None:
+def _retry_send(
+    sender: EmailSender, *, to: str, subject: str, body: str, max_attempts: int
+) -> None:
     """Send with up to max_attempts tries; last failure is logged and skipped."""
     from src.exceptions import EmailSendError
 

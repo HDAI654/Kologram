@@ -216,7 +216,10 @@ def test_user_logged_out_with_email() -> None:
         },
     )
     assert len(email.sent) == 1
-    assert "signed out" in email.sent[0][2].lower() or "sign out" in email.sent[0][2].lower()
+    assert (
+        "signed out" in email.sent[0][2].lower()
+        or "sign out" in email.sent[0][2].lower()
+    )
 
 
 def test_user_logged_out_without_email_skips() -> None:

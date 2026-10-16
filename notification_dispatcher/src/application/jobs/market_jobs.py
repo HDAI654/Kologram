@@ -15,7 +15,9 @@ class CategoryCreatedJob(NotificationJob):
 
     def handle(self, payload: dict[str, Any]) -> None:
         # Temporary NOTHING: no notification until product requires category ops alerts.
-        logger.info("CategoryCreated temporary NOTHING payload_keys=%s", list(payload.keys()))
+        logger.info(
+            "CategoryCreated temporary NOTHING payload_keys=%s", list(payload.keys())
+        )
 
 
 class ListingCreatedJob(NotificationJob):
@@ -23,7 +25,9 @@ class ListingCreatedJob(NotificationJob):
 
     def handle(self, payload: dict[str, Any]) -> None:
         # Temporary NOTHING: no notification for draft/create.
-        logger.info("ListingCreated temporary NOTHING payload_keys=%s", list(payload.keys()))
+        logger.info(
+            "ListingCreated temporary NOTHING payload_keys=%s", list(payload.keys())
+        )
 
 
 class ListingPublishedJob(NotificationJob):
@@ -31,7 +35,9 @@ class ListingPublishedJob(NotificationJob):
 
     def handle(self, payload: dict[str, Any]) -> None:
         # Temporary NOTHING: publish alerts deferred.
-        logger.info("ListingPublished temporary NOTHING payload_keys=%s", list(payload.keys()))
+        logger.info(
+            "ListingPublished temporary NOTHING payload_keys=%s", list(payload.keys())
+        )
 
 
 class ListingStatusChangedJob(NotificationJob):
@@ -40,7 +46,8 @@ class ListingStatusChangedJob(NotificationJob):
     def handle(self, payload: dict[str, Any]) -> None:
         # Temporary NOTHING: status change emails deferred.
         logger.info(
-            "ListingStatusChanged temporary NOTHING payload_keys=%s", list(payload.keys())
+            "ListingStatusChanged temporary NOTHING payload_keys=%s",
+            list(payload.keys()),
         )
 
 
@@ -49,7 +56,9 @@ class ListingUpdatedJob(NotificationJob):
 
     def handle(self, payload: dict[str, Any]) -> None:
         # Temporary NOTHING: update notifications deferred.
-        logger.info("ListingUpdated temporary NOTHING payload_keys=%s", list(payload.keys()))
+        logger.info(
+            "ListingUpdated temporary NOTHING payload_keys=%s", list(payload.keys())
+        )
 
 
 class ListingDeletedJob(NotificationJob):
@@ -57,4 +66,6 @@ class ListingDeletedJob(NotificationJob):
 
     def handle(self, payload: dict[str, Any]) -> None:
         # Temporary NOTHING: deletion notifications deferred.
-        logger.info("ListingDeleted temporary NOTHING payload_keys=%s", list(payload.keys()))
+        logger.info(
+            "ListingDeleted temporary NOTHING payload_keys=%s", list(payload.keys())
+        )

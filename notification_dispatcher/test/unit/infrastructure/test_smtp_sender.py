@@ -21,7 +21,9 @@ def test_smtp_send_success() -> None:
     mock_smtp = MagicMock()
     mock_smtp.__enter__ = MagicMock(return_value=mock_smtp)
     mock_smtp.__exit__ = MagicMock(return_value=False)
-    with patch("src.infrastructure.email.smtp_sender.smtplib.SMTP", return_value=mock_smtp):
+    with patch(
+        "src.infrastructure.email.smtp_sender.smtplib.SMTP", return_value=mock_smtp
+    ):
         sender.send(to="a@b.com", subject="S", body="B")
     mock_smtp.send_message.assert_called_once()
 
@@ -40,6 +42,8 @@ def test_smtp_send_failure_raises() -> None:
     mock_smtp.__enter__ = MagicMock(return_value=mock_smtp)
     mock_smtp.__exit__ = MagicMock(return_value=False)
     mock_smtp.send_message.side_effect = OSError("down")
-    with patch("src.infrastructure.email.smtp_sender.smtplib.SMTP", return_value=mock_smtp):
+    with patch(
+        "src.infrastructure.email.smtp_sender.smtplib.SMTP", return_value=mock_smtp
+    ):
         with pytest.raises(EmailSendError):
             sender.send(to="a@b.com", subject="S", body="B")

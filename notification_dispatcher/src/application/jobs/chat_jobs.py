@@ -16,7 +16,8 @@ class ConversationStartedJob(NotificationJob):
     def handle(self, payload: dict[str, Any]) -> None:
         # Temporary NOTHING: inquiry emails deferred.
         logger.info(
-            "ConversationStarted temporary NOTHING payload_keys=%s", list(payload.keys())
+            "ConversationStarted temporary NOTHING payload_keys=%s",
+            list(payload.keys()),
         )
 
 
@@ -25,4 +26,6 @@ class MessageSentJob(NotificationJob):
 
     def handle(self, payload: dict[str, Any]) -> None:
         # Temporary NOTHING: offline message email deferred (realtime is chat hub).
-        logger.info("MessageSent temporary NOTHING payload_keys=%s", list(payload.keys()))
+        logger.info(
+            "MessageSent temporary NOTHING payload_keys=%s", list(payload.keys())
+        )

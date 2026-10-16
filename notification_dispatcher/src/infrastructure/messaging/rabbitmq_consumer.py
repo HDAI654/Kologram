@@ -73,9 +73,8 @@ class RabbitMQConsumer:
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     return
 
-                event_type = (
-                    str(payload.get("event_type") or "")
-                    or str(getattr(method, "routing_key", "") or "")
+                event_type = str(payload.get("event_type") or "") or str(
+                    getattr(method, "routing_key", "") or ""
                 )
                 if not event_type:
                     logger.error("missing event_type; ack and skip")
@@ -85,7 +84,9 @@ class RabbitMQConsumer:
                 message_id = None
                 if properties is not None:
                     message_id = properties.message_id
-                idem_key = str(message_id or f"{method.exchange}:{method.routing_key}:{body!r}")
+                idem_key = str(
+                    message_id or f"{method.exchange}:{method.routing_key}:{body!r}"
+                )
 
                 self._dispatch(idem_key, event_type, payload)
                 ch.basic_ack(delivery_tag=method.delivery_tag)

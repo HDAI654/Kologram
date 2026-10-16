@@ -28,9 +28,15 @@ class Dispatcher:
         self._verification_jobs = verification_jobs or {}
         self._idempotency = idempotency
 
-    def dispatch(self, *, idempotency_key: str, event_type: str, payload: dict[str, Any]) -> None:
+    def dispatch(
+        self, *, idempotency_key: str, event_type: str, payload: dict[str, Any]
+    ) -> None:
         if self._idempotency.already_processed(idempotency_key):
-            logger.info("skip already processed key=%s event_type=%s", idempotency_key, event_type)
+            logger.info(
+                "skip already processed key=%s event_type=%s",
+                idempotency_key,
+                event_type,
+            )
             return
 
         if event_type == "VerificationTokenCreated":

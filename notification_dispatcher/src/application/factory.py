@@ -41,7 +41,9 @@ def build_email_sender() -> EmailSender:
     return ConsoleEmailSender()
 
 
-def build_dispatcher(email_sender: EmailSender, idempotency: IdempotencyStore) -> Dispatcher:
+def build_dispatcher(
+    email_sender: EmailSender, idempotency: IdempotencyStore
+) -> Dispatcher:
     attempts = Config.EMAIL_MAX_ATTEMPTS
     jobs = {
         "UserRegistered": UserRegisteredJob(email_sender, attempts),

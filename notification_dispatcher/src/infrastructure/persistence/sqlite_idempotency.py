@@ -14,14 +14,12 @@ class SqliteIdempotencyStore(IdempotencyStore):
         if db_path != ":memory:":
             Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
-        self._conn.execute(
-            """
+        self._conn.execute("""
             CREATE TABLE IF NOT EXISTS processed_events (
                 key TEXT PRIMARY KEY,
                 processed_at TEXT NOT NULL DEFAULT (datetime('now'))
             )
-            """
-        )
+            """)
         self._conn.commit()
 
     def already_processed(self, key: str) -> bool:
