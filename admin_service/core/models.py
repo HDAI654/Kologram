@@ -7,6 +7,12 @@ This app only provides Django admin CRUD against those tables.
 
 from django.db import models
 import uuid
+from django.utils import timezone
+
+
+def generate_uuid() -> str:
+    return str(uuid.uuid4())
+
 
 # ---------------------------------------------------------------------------
 # AuthDB — users (Auth Service)
@@ -21,7 +27,7 @@ class UserStatus(models.TextChoices):
 class AuthUser(models.Model):
     """Maps to Auth Service table `users`."""
 
-    id = models.CharField(max_length=36, primary_key=True)
+    id = models.CharField(max_length=36, primary_key=True, default=generate_uuid)
     email = models.EmailField(max_length=254, unique=True, db_index=True)
     hashed_password = models.CharField(max_length=255)
     status = models.CharField(
@@ -47,10 +53,6 @@ class AuthUser(models.Model):
 # ---------------------------------------------------------------------------
 
 
-def generate_uuid() -> str:
-    return str(uuid.uuid4())
-
-
 class Category(models.Model):
     """Maps to Market Service table `categories`."""
 
@@ -66,7 +68,7 @@ class Category(models.Model):
     )
 
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         managed = False
@@ -99,9 +101,21 @@ class CurrencyChoices(models.TextChoices):
 class Listing(models.Model):
     """Maps to Market Service table `listings`."""
 
-    id = models.CharField(max_length=36, primary_key=True)
-    seller_id = models.CharField(max_length=36, db_index=True)
-    category_id = models.CharField(max_length=36, db_index=True)
+    id = models.CharField(max_length=36, primary_key=True, default=generate_uuid)
+    seller = models.ForeignKey(
+        AuthUser,
+        db_column="seller_id",
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        related_name="listings",
+    )
+    category = models.ForeignKey(
+        Category,
+        db_column="category_id",
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        related_name="listings",
+    )
     title = models.CharField(max_length=120)
     description = models.TextField(blank=True, default="")
     price_amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -130,7 +144,7 @@ class Listing(models.Model):
 class ListingImage(models.Model):
     """Maps to Market Service table `listing_images`."""
 
-    id = models.CharField(max_length=36, primary_key=True)
+    id = models.CharField(max_length=36, primary_key=True, default=generate_uuid)
     listing = models.ForeignKey(
         Listing,
         db_column="listing_id",
