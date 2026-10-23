@@ -2,8 +2,8 @@
 set -e
 
 python manage.py migrate --noinput
+python manage.py collectstatic --noinput
 
-# Create superuser if credentials are provided and user doesn't exist yet
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
   python manage.py shell <<'PYEOF'
 import os
