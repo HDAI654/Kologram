@@ -127,8 +127,8 @@ class Listing(models.Model):
         max_length=20, choices=ListingStatus.choices, db_index=True
     )
     location = models.CharField(max_length=200)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         managed = False
