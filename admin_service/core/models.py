@@ -6,6 +6,7 @@ This app only provides Django admin CRUD against those tables.
 """
 
 from django.db import models
+import uuid
 
 # ---------------------------------------------------------------------------
 # AuthDB — users (Auth Service)
@@ -46,12 +47,24 @@ class AuthUser(models.Model):
 # ---------------------------------------------------------------------------
 
 
+def generate_uuid() -> str:
+    return str(uuid.uuid4())
+
+
 class Category(models.Model):
     """Maps to Market Service table `categories`."""
 
-    id = models.CharField(max_length=36, primary_key=True)
+    id = models.CharField(max_length=36, primary_key=True, default=generate_uuid)
     name = models.CharField(max_length=80, unique=True, db_index=True)
-    parent_id = models.CharField(max_length=36, null=True, blank=True, db_index=True)
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="children",
+        db_column="parent_id",
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField()
 
